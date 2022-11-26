@@ -458,4 +458,15 @@ public interface GroundItemsConfig extends Config
 	{
 		return Keybind.ALT;
 	}
+
+	@ConfigItem(
+			keyName = "showHAPrice",
+			name = "Show HA Price",
+			description = "Configures whether or not item HA prices are visible.",
+			position = 34
+	)
+	default boolean showHaPrice()
+	{
+		return true;
+	}
 }

@@ -251,7 +251,7 @@ public class GroundItemsOverlay extends Overlay
 						.append(" gp)");
 				}
 
-				if (item.getHaPrice() > 0)
+				if (item.getHaPrice() > 0 && config.showHaPrice())
 				{
 					itemStringBuilder.append(" (HA: ")
 						.append(QuantityFormatter.quantityToStackSize(item.getHaPrice()))
