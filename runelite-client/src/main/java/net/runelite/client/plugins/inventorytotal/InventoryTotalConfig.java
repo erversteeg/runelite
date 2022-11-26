@@ -24,11 +24,108 @@
  */
 package net.runelite.client.plugins.inventorytotal;
 
+import net.runelite.client.config.Alpha;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
+import net.runelite.client.config.ConfigItem;
+
+import java.awt.*;
 
 @ConfigGroup(InventoryTotalConfig.GROUP)
 public interface InventoryTotalConfig extends Config
 {
 	String GROUP = "inventorytotal";
+
+	@Alpha
+	@ConfigItem(
+			keyName = "backgroundColor",
+			name = "Count Background Color",
+			description = "Configures the background color of the inventory total counter."
+	)
+	default Color backgroundColor()
+	{
+		return Color.decode("#268736");
+	}
+
+	@ConfigItem(
+			keyName = "textColor",
+			name = "Count Text Color",
+			description = "Configures the text color of the inventory total counter."
+	)
+	default Color textColor()
+	{
+		return Color.decode("#FFFFFF");
+	}
+
+	@Alpha
+	@ConfigItem(
+			keyName = "borderColor",
+			name = "Container Border Color",
+			description = "Configures the containers border color."
+	)
+
+	default Color borderColor()
+	{
+		return Color.decode("#000000");
+	}
+
+	@ConfigItem(
+			keyName = "showBorder",
+			name = "Container Border",
+			description = "Configures whether or not the container has a border."
+	)
+	default boolean showBorder()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "fixedSize",
+			name = "Fixed Size",
+			description = "Configures whether or not the container is a fixed size or matches the text."
+	)
+	default boolean isFixedSize()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "showWhenEmpty",
+			name = "Show On Empty",
+			description = "Configures whether or not the total is shown when there are no items in the inventory."
+	)
+	default boolean showOnEmpty()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "inventoryGap",
+			name = "Inventory Gap",
+			description = "Configures how much of a gap there is between the total and inventory."
+	)
+	default int inventoryGap()
+	{
+		return 10;
+	}
+
+	@ConfigItem(
+			keyName = "roundedCorners",
+			name = "Rounded Corners",
+			description = "Configures whether or not the container has rounded corners."
+	)
+	default boolean hasRoundedCorners()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "horizontalAlignment",
+			name = "Alignment",
+			description = "Configures whether or not the container has rounded corners."
+	)
+	default InventoryTotalAlignment horizontalAlignment()
+	{
+		return InventoryTotalAlignment.CENTER;
+	}
 }

@@ -34,6 +34,7 @@ import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.TextComponent;
+import net.runelite.client.util.ImageUtil;
 
 import javax.inject.Inject;
 import java.awt.Point;
@@ -44,6 +45,10 @@ import java.util.Locale;
 class InventoryTotalOverlay extends Overlay
 {
 	private static final int COINS = ItemID.COINS_995;
+
+	private static final int CORNER_RADIUS = 10;
+
+	private static final int TEXT_Y_OFFSET = 16;
 
 	private final Client client;
 	private final ItemManager itemManager;
@@ -63,18 +68,24 @@ class InventoryTotalOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		final Widget bankWidget = client.getWidget(WidgetInfo.BANK_ITEM_CONTAINER);
-		final Widget inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
+		Widget inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
+		if (inventoryWidget == null || inventoryWidget.getCanvasLocation().getX() < 0 || inventoryWidget.isHidden())
+		{
+			inventoryWidget = client.getWidget(WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER);
+		}
+
 		final ItemContainer itemContainer = client.getItemContainer(InventoryID.INVENTORY);
 
-		if ((inventoryWidget == null || inventoryWidget.isHidden() && (bankWidget == null || bankWidget.isHidden())) || itemContainer == null)
+		boolean isInvHidden = inventoryWidget == null || inventoryWidget.isHidden();
+		if (isInvHidden || itemContainer == null)
 		{
 			return null;
 		}
 
 		final Item[] items = itemContainer.getItems();
 
-		int total = 0;
+		int totalQty = 0;
+		int totalGp = 0;
 
 		for (int i = 0; i < items.length; i++)
 		{
@@ -88,50 +99,95 @@ class InventoryTotalOverlay extends Overlay
 
 			int gePrice;
 
+			int itemQty = item.getQuantity();
+
 			if (realItemId == COINS)
 			{
-				gePrice = item.getQuantity();
+				gePrice = itemQty;
 			}
 			else
 			{
-				int qty = item.getQuantity();
-				gePrice = qty * itemManager.getItemPrice(realItemId);
+				gePrice = itemQty * itemManager.getItemPrice(realItemId);
 			}
 
-			total += gePrice;
+			totalGp += gePrice;
+			totalQty += itemQty;
 		}
 
 		final TextComponent textComponent = new TextComponent();
 
-		textComponent.setText(String.valueOf(total));
+		textComponent.setText(String.valueOf(totalGp));
 		textComponent.setPosition(new Point(0, 0));
 		textComponent.render(graphics);
 
 		int width = 120;
 		int height = 20;
 
-		String totalText = NumberFormat.getInstance(Locale.ENGLISH).format(total) + " gp";
+		String totalText = NumberFormat.getInstance(Locale.ENGLISH).format(totalGp) + " gp";
 
-		renderTotal(config, graphics, totalText, (inventoryWidget.getCanvasLocation().getX() + inventoryWidget.getWidth() / 2) - (width / 2), inventoryWidget.getCanvasLocation().getY() - height - 10, width, height);
+		renderTotal(config, graphics, inventoryWidget, totalQty, totalText, width, height);
 
 		return null;
 	}
 
-	private void renderTotal(InventoryTotalConfig config, Graphics2D graphics, String text, int x, int y, int width, int height)
+	private void renderTotal(InventoryTotalConfig config, Graphics2D graphics, Widget inventoryWidget, int totalQty, String text, int fixedWidth, int fixedHeight)
 	{
-		graphics.setColor(new Color(0, 0, 0, 255));
-		graphics.drawRoundRect(x, y, width, height, 10, 10);
-
-		graphics.setColor(new Color(38, 135, 54, 150));
-		graphics.fillRoundRect(x, y, width, height, 10, 10);
+		if (totalQty == 0 && !config.showOnEmpty())
+		{
+			return;
+		}
 
 		graphics.setFont(FontManager.getRunescapeSmallFont());
-		final int totalWidth = graphics.getFontMetrics().stringWidth(text);
-		final int centerX = (width / 2) - (totalWidth / 2);
+		final int textWidth = graphics.getFontMetrics().stringWidth(text);
+
+		int width = fixedWidth;
+		int height = fixedHeight;
+
+		if (!config.isFixedSize())
+		{
+			width = textWidth + 20;
+		}
+
+		int x = (inventoryWidget.getCanvasLocation().getX() + inventoryWidget.getWidth() / 2) - (width / 2);
+		switch (config.horizontalAlignment())
+		{
+			case CENTER:
+				break;
+
+			case LEFT:
+				x = inventoryWidget.getCanvasLocation().getX();
+				break;
+
+			case RIGHT:
+				x = inventoryWidget.getCanvasLocation().getX() + inventoryWidget.getWidth() - width;
+				break;
+		}
+
+		int y = inventoryWidget.getCanvasLocation().getY() - height - config.inventoryGap();
+
+		int cornerRadius = 0;
+		if (config.hasRoundedCorners())
+		{
+			cornerRadius = CORNER_RADIUS;
+		}
+
+		int containerAlpha = config.backgroundColor().getAlpha();
+
+		if (containerAlpha > 0 && config.showBorder()) {
+			graphics.setColor(config.borderColor());
+			graphics.drawRoundRect(x, y, width, height, cornerRadius, cornerRadius);
+		}
+
+		graphics.setColor(config.backgroundColor());
+		graphics.fillRoundRect(x, y, width, height, cornerRadius, cornerRadius);
+
+		final int centerX = (width / 2) - (textWidth / 2);
 
 		final TextComponent textComponent = new TextComponent();
+
+		textComponent.setColor(config.textColor());
 		textComponent.setText(text);
-		textComponent.setPosition(new Point(x + centerX, y + 16));
+		textComponent.setPosition(new Point(x + centerX, y + TEXT_Y_OFFSET));
 		textComponent.render(graphics);
 	}
 }
