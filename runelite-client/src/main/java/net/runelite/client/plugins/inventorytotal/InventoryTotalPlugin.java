@@ -48,8 +48,8 @@ import javax.inject.Inject;
 public class InventoryTotalPlugin extends Plugin
 {
 	private static final int COINS = ItemID.COINS_995;
-	private static final int TOTAL_GP_INDEX = 0;
-	private static final int TOTAL_QTY_INDEX = 1;
+	static final int TOTAL_GP_INDEX = 0;
+	static final int TOTAL_QTY_INDEX = 1;
 
 	@Inject
 	private InventoryTotalOverlay overlay;
@@ -77,9 +77,6 @@ public class InventoryTotalPlugin extends Plugin
 	private InventoryTotalState state = InventoryTotalState.NONE;
 	private InventoryTotalState prevState = InventoryTotalState.NONE;
 
-	private Widget inventoryWidget;
-	private ItemContainer itemContainer;
-
 	@Override
 	protected void startUp() throws Exception
 	{
@@ -92,18 +89,12 @@ public class InventoryTotalPlugin extends Plugin
 		overlayManager.remove(overlay);
 	}
 
-	@Subscribe
-	public void onGameTick(GameTick gameTick)
-	{
-		updateState();
-	}
-
-	private void onNewFarm()
+	void onNewFarm()
 	{
 		initialGp = totalGp;
 	}
 
-	private void onBank()
+	void onBank()
 	{
 		initialGp = 0;
 	}
@@ -114,51 +105,10 @@ public class InventoryTotalPlugin extends Plugin
 		return configManager.getConfig(InventoryTotalConfig.class);
 	}
 
-	private void updateState()
+	int [] getTotals()
 	{
-		int [] totals = getTotals();
+		final ItemContainer itemContainer = overlay.getItemContainer();
 
-		totalGp = totals[TOTAL_GP_INDEX];
-		totalQty = totals[TOTAL_QTY_INDEX];
-
-		inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
-
-		boolean isBank = false;
-
-		if (inventoryWidget == null || inventoryWidget.getCanvasLocation().getX() < 0 || inventoryWidget.isHidden())
-		{
-			inventoryWidget = client.getWidget(WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER);
-			if (inventoryWidget != null && !inventoryWidget.isHidden())
-			{
-				isBank = true;
-			}
-		}
-
-		prevState = state;
-
-		if (isBank)
-		{
-			state = InventoryTotalState.BANK;
-		}
-		else
-		{
-			state = InventoryTotalState.FARM;
-		}
-
-		if (prevState == InventoryTotalState.BANK && state == InventoryTotalState.FARM)
-		{
-			onNewFarm();
-		}
-		else if (prevState == InventoryTotalState.FARM && state == InventoryTotalState.BANK)
-		{
-			onBank();
-		}
-
-		itemContainer = client.getItemContainer(InventoryID.INVENTORY);
-	}
-
-	private int [] getTotals()
-	{
 		if (itemContainer == null)
 		{
 			return new int [2];
@@ -204,24 +154,35 @@ public class InventoryTotalPlugin extends Plugin
 		return totals;
 	}
 
+	void setState(InventoryTotalState state)
+	{
+		this.prevState = this.state;
+		this.state = state;
+	}
+
 	public InventoryTotalState getState()
 	{
 		return state;
 	}
 
-	public Widget getInventoryWidget()
+	public InventoryTotalState getPreviousState()
 	{
-		return inventoryWidget;
-	}
-
-	public ItemContainer getItemContainer()
-	{
-		return itemContainer;
+		return prevState;
 	}
 
 	public int getProfitGp()
 	{
 		return totalGp - initialGp;
+	}
+
+	void setTotalGp(int totalGp)
+	{
+		this.totalGp = totalGp;
+	}
+
+	void setTotalQty(int totalQty)
+	{
+		this.totalQty = totalQty;
 	}
 
 	public int getTotalQty()

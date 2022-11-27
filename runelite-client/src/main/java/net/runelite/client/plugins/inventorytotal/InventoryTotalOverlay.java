@@ -27,7 +27,7 @@ package net.runelite.client.plugins.inventorytotal;
 
 import net.runelite.api.*;
 import net.runelite.api.widgets.Widget;
-import net.runelite.client.game.ItemManager;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -50,6 +50,9 @@ class InventoryTotalOverlay extends Overlay
 	private final InventoryTotalPlugin plugin;
 	private final InventoryTotalConfig config;
 
+	private Widget inventoryWidget;
+	private ItemContainer itemContainer;
+
 	@Inject
 	private InventoryTotalOverlay(Client client, InventoryTotalPlugin plugin, InventoryTotalConfig config)
 	{
@@ -61,11 +64,51 @@ class InventoryTotalOverlay extends Overlay
 		this.config = config;
 	}
 
+	private void updatePluginState()
+	{
+		int [] totals = plugin.getTotals();
+
+		plugin.setTotalGp(totals[InventoryTotalPlugin.TOTAL_GP_INDEX]);
+		plugin.setTotalQty(totals[InventoryTotalPlugin.TOTAL_QTY_INDEX]);
+
+		inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
+
+		boolean isBank = false;
+
+		if (inventoryWidget == null || inventoryWidget.getCanvasLocation().getX() < 0 || inventoryWidget.isHidden())
+		{
+			inventoryWidget = client.getWidget(WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER);
+			if (inventoryWidget != null && !inventoryWidget.isHidden())
+			{
+				isBank = true;
+			}
+		}
+
+		if (isBank)
+		{
+			plugin.setState(InventoryTotalState.BANK);
+		}
+		else
+		{
+			plugin.setState(InventoryTotalState.FARM);
+		}
+
+		if (plugin.getPreviousState() == InventoryTotalState.BANK && plugin.getState() == InventoryTotalState.FARM)
+		{
+			plugin.onNewFarm();
+		}
+		else if (plugin.getPreviousState() == InventoryTotalState.FARM && plugin.getState() == InventoryTotalState.BANK)
+		{
+			plugin.onBank();
+		}
+
+		itemContainer = client.getItemContainer(InventoryID.INVENTORY);
+	}
+
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		Widget inventoryWidget = plugin.getInventoryWidget();
-		ItemContainer itemContainer = plugin.getItemContainer();
+		updatePluginState();
 
 		boolean isInvHidden = inventoryWidget == null || inventoryWidget.isHidden();
 		if (isInvHidden || itemContainer == null)
@@ -163,5 +206,15 @@ class InventoryTotalOverlay extends Overlay
 		textComponent.setText(text);
 		textComponent.setPosition(new Point(x + centerX, y + TEXT_Y_OFFSET));
 		textComponent.render(graphics);
+	}
+
+	public Widget getInventoryWidget()
+	{
+		return inventoryWidget;
+	}
+
+	public ItemContainer getItemContainer()
+	{
+		return itemContainer;
 	}
 }
