@@ -27,14 +27,12 @@ package net.runelite.client.plugins.inventorytotal;
 
 import net.runelite.api.*;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.TextComponent;
-import net.runelite.client.util.ImageUtil;
 
 import javax.inject.Inject;
 import java.awt.Point;
@@ -44,37 +42,30 @@ import java.util.Locale;
 
 class InventoryTotalOverlay extends Overlay
 {
-	private static final int COINS = ItemID.COINS_995;
-
 	private static final int CORNER_RADIUS = 10;
 
 	private static final int TEXT_Y_OFFSET = 16;
 
 	private final Client client;
-	private final ItemManager itemManager;
+	private final InventoryTotalPlugin plugin;
 	private final InventoryTotalConfig config;
 
 	@Inject
-	private InventoryTotalOverlay(Client client, ItemManager itemManager, InventoryTotalConfig config)
+	private InventoryTotalOverlay(Client client, InventoryTotalPlugin plugin, InventoryTotalConfig config)
 	{
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
 
-		this.itemManager = itemManager;
 		this.client = client;
+		this.plugin = plugin;
 		this.config = config;
 	}
 
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		Widget inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
-		if (inventoryWidget == null || inventoryWidget.getCanvasLocation().getX() < 0 || inventoryWidget.isHidden())
-		{
-			inventoryWidget = client.getWidget(WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER);
-		}
-
-		final ItemContainer itemContainer = client.getItemContainer(InventoryID.INVENTORY);
+		Widget inventoryWidget = plugin.getInventoryWidget();
+		ItemContainer itemContainer = plugin.getItemContainer();
 
 		boolean isInvHidden = inventoryWidget == null || inventoryWidget.isHidden();
 		if (isInvHidden || itemContainer == null)
@@ -82,55 +73,23 @@ class InventoryTotalOverlay extends Overlay
 			return null;
 		}
 
-		final Item[] items = itemContainer.getItems();
-
-		int totalQty = 0;
-		int totalGp = 0;
-
-		for (int i = 0; i < items.length; i++)
-		{
-			Item item = items[i];
-			int itemId = item.getId();
-
-			final ItemComposition itemComposition = itemManager.getItemComposition(itemId);
-
-			final boolean isNoted = itemComposition.getNote() != -1;
-			final int realItemId = isNoted ? itemComposition.getLinkedNoteId() : itemId;
-
-			int gePrice;
-
-			int itemQty = item.getQuantity();
-
-			if (realItemId == COINS)
-			{
-				gePrice = itemQty;
-			}
-			else
-			{
-				gePrice = itemQty * itemManager.getItemPrice(realItemId);
-			}
-
-			totalGp += gePrice;
-			totalQty += itemQty;
-		}
-
 		final TextComponent textComponent = new TextComponent();
 
-		textComponent.setText(String.valueOf(totalGp));
+		textComponent.setText(String.valueOf(plugin.getProfitGp()));
 		textComponent.setPosition(new Point(0, 0));
 		textComponent.render(graphics);
 
 		int width = 120;
 		int height = 20;
 
-		String totalText = NumberFormat.getInstance(Locale.ENGLISH).format(totalGp) + " gp";
+		String totalText = NumberFormat.getInstance(Locale.ENGLISH).format(plugin.getProfitGp()) + " gp";
 
-		renderTotal(config, graphics, inventoryWidget, totalQty, totalText, width, height);
+		renderTotal(config, graphics, plugin, inventoryWidget, plugin.getProfitGp(), plugin.getTotalQty(), totalText, width, height);
 
 		return null;
 	}
 
-	private void renderTotal(InventoryTotalConfig config, Graphics2D graphics, Widget inventoryWidget, int totalQty, String text, int fixedWidth, int fixedHeight)
+	private void renderTotal(InventoryTotalConfig config, Graphics2D graphics, InventoryTotalPlugin plugin, Widget inventoryWidget, int profitGp, int totalQty, String text, int fixedWidth, int fixedHeight)
 	{
 		if (totalQty == 0 && !config.showOnEmpty())
 		{
@@ -171,14 +130,29 @@ class InventoryTotalOverlay extends Overlay
 			cornerRadius = CORNER_RADIUS;
 		}
 
-		int containerAlpha = config.backgroundColor().getAlpha();
+		Color backgroundColor = config.bankColor();
+
+		if (plugin.getState() == InventoryTotalState.FARM)
+		{
+			if (profitGp >= 0)
+			{
+				backgroundColor = config.profitColor();
+			}
+			else
+			{
+				backgroundColor = config.lossColor();
+			}
+		}
+
+		int containerAlpha = backgroundColor.getAlpha();
 
 		if (containerAlpha > 0 && config.showBorder()) {
 			graphics.setColor(config.borderColor());
 			graphics.drawRoundRect(x, y, width, height, cornerRadius, cornerRadius);
 		}
 
-		graphics.setColor(config.backgroundColor());
+		graphics.setColor(backgroundColor);
+
 		graphics.fillRoundRect(x, y, width, height, cornerRadius, cornerRadius);
 
 		final int centerX = (width / 2) - (textWidth / 2);

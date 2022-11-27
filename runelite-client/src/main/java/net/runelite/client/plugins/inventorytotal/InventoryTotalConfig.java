@@ -38,13 +38,35 @@ public interface InventoryTotalConfig extends Config
 
 	@Alpha
 	@ConfigItem(
-			keyName = "backgroundColor",
-			name = "Count Background Color",
-			description = "Configures the background color of the inventory total counter."
+			keyName = "profitBackgroundColor",
+			name = "Profit Color",
+			description = "Configures the background color of the counter when gaining gp."
 	)
-	default Color backgroundColor()
+	default Color profitColor()
 	{
 		return Color.decode("#268736");
+	}
+
+	@Alpha
+	@ConfigItem(
+			keyName = "lossBackgroundColor",
+			name = "Loss Color",
+			description = "Configures the background color of the counter when losing gp."
+	)
+	default Color lossColor()
+	{
+		return Color.decode("#87182F");
+	}
+
+	@Alpha
+	@ConfigItem(
+			keyName = "bankBackgroundColor",
+			name = "Bank Color",
+			description = "Configures the background color of the counter when the bank is open."
+	)
+	default Color bankColor()
+	{
+		return Color.decode("#2E2E2E");
 	}
 
 	@ConfigItem(
