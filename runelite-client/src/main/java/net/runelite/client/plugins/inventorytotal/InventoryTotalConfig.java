@@ -77,33 +77,13 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "totalGpColor",
-			name = "Total Gp Color",
-			description = "Configures the text color of the total gp counter."
-	)
-	default Color totalGpColor()
-	{
-		return Color.decode("#FFFFFF");
-	}
-
-	@ConfigItem(
-			keyName = "runTimeColor",
-			name = "Run Time Color",
-			description = "Configures the text color of the elapsed run time."
-	)
-	default Color runTimeColor()
-	{
-		return Color.decode("#FFFFFF");
-	}
-
-	@ConfigItem(
 			keyName = "roundedCorners",
 			name = "Rounded Corners",
 			description = "Configures whether or not the total has rounded corners."
 	)
 	default boolean roundCorners()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(

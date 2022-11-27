@@ -231,16 +231,16 @@ class InventoryTotalOverlay extends Overlay
 
 		if (containerAlpha > 0) {
 			graphics.setColor(Color.BLACK);
-			graphics.drawRoundRect(x, y, width, height, cornerRadius, cornerRadius);
+			graphics.drawRoundRect(x, y, width + 1, height + 1, cornerRadius, cornerRadius);
 		}
 
 		graphics.setColor(backgroundColor);
 
-		graphics.fillRoundRect(x, y, width, height, cornerRadius, cornerRadius);
+		graphics.fillRoundRect(x + 1, y + 1, width, height, cornerRadius, cornerRadius);
 
 		TextComponent textComponent = new TextComponent();
 
-		textComponent.setColor(config.totalGpColor());
+		textComponent.setColor(Color.WHITE);
 		textComponent.setText(totalText);
 		textComponent.setPosition(new Point(x + 10, y + TEXT_Y_OFFSET));
 		textComponent.render(graphics);
@@ -249,7 +249,7 @@ class InventoryTotalOverlay extends Overlay
 		{
 			textComponent = new TextComponent();
 
-			textComponent.setColor(config.runTimeColor());
+			textComponent.setColor(Color.WHITE);
 			textComponent.setText(runTimeText);
 			textComponent.setPosition(new Point((x + width) - 10 - actualRunTimeWidth, y + TEXT_Y_OFFSET));
 			textComponent.render(graphics);
