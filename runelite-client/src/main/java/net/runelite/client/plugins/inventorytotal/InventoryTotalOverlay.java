@@ -43,8 +43,10 @@ import java.util.Locale;
 class InventoryTotalOverlay extends Overlay
 {
 	private static final int CORNER_RADIUS = 10;
-
 	private static final int TEXT_Y_OFFSET = 16;
+	private static final int INVENTORY_GAP_OFFSET = 6;
+	private static final String RUN_TIME_FORMAT = "%02d:%02d:%02d";
+	private static final String RUN_TIME_NO_HOURS_FORMAT = "%02d:%02d";
 
 	private final Client client;
 	private final InventoryTotalPlugin plugin;
@@ -90,14 +92,14 @@ class InventoryTotalOverlay extends Overlay
 		}
 		else
 		{
-			plugin.setState(InventoryTotalState.FARM);
+			plugin.setState(InventoryTotalState.RUN);
 		}
 
-		if (plugin.getPreviousState() == InventoryTotalState.BANK && plugin.getState() == InventoryTotalState.FARM)
+		if (plugin.getPreviousState() == InventoryTotalState.BANK && plugin.getState() == InventoryTotalState.RUN)
 		{
-			plugin.onNewFarm();
+			plugin.onNewRun();
 		}
-		else if (plugin.getPreviousState() == InventoryTotalState.FARM && plugin.getState() == InventoryTotalState.BANK)
+		else if (plugin.getPreviousState() == InventoryTotalState.RUN && plugin.getState() == InventoryTotalState.BANK)
 		{
 			plugin.onBank();
 		}
@@ -122,17 +124,27 @@ class InventoryTotalOverlay extends Overlay
 		textComponent.setPosition(new Point(0, 0));
 		textComponent.render(graphics);
 
-		int width = 120;
 		int height = 20;
 
 		String totalText = NumberFormat.getInstance(Locale.ENGLISH).format(plugin.getProfitGp()) + " gp";
 
-		renderTotal(config, graphics, plugin, inventoryWidget, plugin.getProfitGp(), plugin.getTotalQty(), totalText, width, height);
+		String formattedRunTime = getFormattedRunTime();
+		String runTimeText = null;
+
+		if (formattedRunTime != null)
+		{
+			runTimeText = " (" + formattedRunTime + ")";
+		}
+
+		renderTotal(config, graphics, plugin, inventoryWidget, plugin.getProfitGp(),
+				plugin.getTotalQty(), totalText, runTimeText, height);
 
 		return null;
 	}
 
-	private void renderTotal(InventoryTotalConfig config, Graphics2D graphics, InventoryTotalPlugin plugin, Widget inventoryWidget, int profitGp, int totalQty, String text, int fixedWidth, int fixedHeight)
+	private void renderTotal(InventoryTotalConfig config, Graphics2D graphics, InventoryTotalPlugin plugin,
+							 Widget inventoryWidget, int profitGp, int totalQty, String totalText,
+							 String runTimeText, int height)
 	{
 		if (totalQty == 0 && !config.showOnEmpty())
 		{
@@ -140,15 +152,18 @@ class InventoryTotalOverlay extends Overlay
 		}
 
 		graphics.setFont(FontManager.getRunescapeSmallFont());
-		final int textWidth = graphics.getFontMetrics().stringWidth(text);
+		final int totalWidth = graphics.getFontMetrics().stringWidth(totalText);
 
-		int width = fixedWidth;
-		int height = fixedHeight;
+		int fixedRunTimeWidth = 0;
+		int actualRunTimeWidth = 0;
 
-		if (!config.isFixedSize())
+		if (runTimeText != null && runTimeText.length() >= 2)
 		{
-			width = textWidth + 20;
+			fixedRunTimeWidth = 5 * (runTimeText.length() - 2) + (3 * 2) + 5;
+			actualRunTimeWidth = graphics.getFontMetrics().stringWidth(runTimeText);
 		}
+
+		int width = totalWidth + fixedRunTimeWidth + 20;
 
 		int x = (inventoryWidget.getCanvasLocation().getX() + inventoryWidget.getWidth() / 2) - (width / 2);
 		switch (config.horizontalAlignment())
@@ -165,17 +180,11 @@ class InventoryTotalOverlay extends Overlay
 				break;
 		}
 
-		int y = inventoryWidget.getCanvasLocation().getY() - height - config.inventoryGap();
-
-		int cornerRadius = 0;
-		if (config.hasRoundedCorners())
-		{
-			cornerRadius = CORNER_RADIUS;
-		}
+		int y = inventoryWidget.getCanvasLocation().getY() - height - config.inventoryGap() + INVENTORY_GAP_OFFSET;
 
 		Color backgroundColor = config.bankColor();
 
-		if (plugin.getState() == InventoryTotalState.FARM)
+		if (plugin.getState() == InventoryTotalState.RUN)
 		{
 			if (profitGp >= 0)
 			{
@@ -187,25 +196,66 @@ class InventoryTotalOverlay extends Overlay
 			}
 		}
 
+		int opacity = 150;
+		if (config.opaqueBackground())
+		{
+			opacity = 255;
+		}
+
+		backgroundColor = new Color(backgroundColor.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue(), opacity);
+
 		int containerAlpha = backgroundColor.getAlpha();
 
-		if (containerAlpha > 0 && config.showBorder()) {
-			graphics.setColor(config.borderColor());
-			graphics.drawRoundRect(x, y, width, height, cornerRadius, cornerRadius);
+		if (containerAlpha > 0) {
+			graphics.setColor(Color.BLACK);
+			graphics.drawRoundRect(x, y, width, height, CORNER_RADIUS, CORNER_RADIUS);
 		}
 
 		graphics.setColor(backgroundColor);
 
-		graphics.fillRoundRect(x, y, width, height, cornerRadius, cornerRadius);
+		graphics.fillRoundRect(x, y, width, height, CORNER_RADIUS, CORNER_RADIUS);
 
-		final int centerX = (width / 2) - (textWidth / 2);
+		TextComponent textComponent = new TextComponent();
 
-		final TextComponent textComponent = new TextComponent();
-
-		textComponent.setColor(config.textColor());
-		textComponent.setText(text);
-		textComponent.setPosition(new Point(x + centerX, y + TEXT_Y_OFFSET));
+		textComponent.setColor(config.totalGpColor());
+		textComponent.setText(totalText);
+		textComponent.setPosition(new Point(x + 10, y + TEXT_Y_OFFSET));
 		textComponent.render(graphics);
+
+		if (runTimeText != null)
+		{
+			textComponent = new TextComponent();
+
+			textComponent.setColor(config.runTimeColor());
+			textComponent.setText(runTimeText);
+			textComponent.setPosition(new Point((x + width) - 10 - actualRunTimeWidth, y + TEXT_Y_OFFSET));
+			textComponent.render(graphics);
+		}
+	}
+
+	private String getFormattedRunTime()
+	{
+		long runTime = plugin.elapsedRunTime();
+		if (runTime == InventoryTotalPlugin.NO_RUN_TIME)
+		{
+			return null;
+		}
+
+		long totalSecs = runTime / 1000;
+		long totalMins = totalSecs / 60;
+
+		long hrs = totalMins / 60;
+		long mins = totalMins % 60;
+		long secs = totalSecs % 60;
+
+		if (hrs > 0)
+		{
+			return String.format(RUN_TIME_FORMAT, hrs, mins, secs);
+		}
+		else
+		{
+			return String.format(RUN_TIME_NO_HOURS_FORMAT, mins, secs);
+		}
 	}
 
 	public Widget getInventoryWidget()

@@ -38,6 +38,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
+import java.time.Instant;
 
 @PluginDescriptor(
 	name = "Inventory Total",
@@ -50,6 +51,7 @@ public class InventoryTotalPlugin extends Plugin
 	private static final int COINS = ItemID.COINS_995;
 	static final int TOTAL_GP_INDEX = 0;
 	static final int TOTAL_QTY_INDEX = 1;
+	static final int NO_RUN_TIME = -1;
 
 	@Inject
 	private InventoryTotalOverlay overlay;
@@ -72,6 +74,8 @@ public class InventoryTotalPlugin extends Plugin
 	private int totalGp = 0;
 	private int totalQty = 0;
 
+	private Instant runStartTime;
+
 	private int initialGp = 0;
 
 	private InventoryTotalState state = InventoryTotalState.NONE;
@@ -89,13 +93,15 @@ public class InventoryTotalPlugin extends Plugin
 		overlayManager.remove(overlay);
 	}
 
-	void onNewFarm()
+	void onNewRun()
 	{
+		runStartTime = Instant.now();
 		initialGp = totalGp;
 	}
 
 	void onBank()
 	{
+		runStartTime = null;
 		initialGp = 0;
 	}
 
@@ -188,5 +194,28 @@ public class InventoryTotalPlugin extends Plugin
 	public int getTotalQty()
 	{
 		return totalQty;
+	}
+
+	long elapsedRunTime()
+	{
+		if (runStartTime == null || !config.showRunTime())
+		{
+			return NO_RUN_TIME;
+		}
+
+		long elapsedRunTime = Instant
+				.now()
+				.minusMillis(runStartTime.toEpochMilli())
+				.toEpochMilli();
+
+		long elapsedSecs = elapsedRunTime / 1000;
+		int startThreshold = config.runTimeStartThreshold();
+
+		if (elapsedSecs < startThreshold)
+		{
+			return NO_RUN_TIME;
+		}
+
+		return elapsedRunTime;
 	}
 }

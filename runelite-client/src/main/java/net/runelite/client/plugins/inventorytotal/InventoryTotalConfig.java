@@ -36,7 +36,6 @@ public interface InventoryTotalConfig extends Config
 {
 	String GROUP = "inventorytotal";
 
-	@Alpha
 	@ConfigItem(
 			keyName = "profitBackgroundColor",
 			name = "Profit Color",
@@ -47,7 +46,6 @@ public interface InventoryTotalConfig extends Config
 		return Color.decode("#268736");
 	}
 
-	@Alpha
 	@ConfigItem(
 			keyName = "lossBackgroundColor",
 			name = "Loss Color",
@@ -58,7 +56,6 @@ public interface InventoryTotalConfig extends Config
 		return Color.decode("#87182F");
 	}
 
-	@Alpha
 	@ConfigItem(
 			keyName = "bankBackgroundColor",
 			name = "Bank Color",
@@ -66,49 +63,37 @@ public interface InventoryTotalConfig extends Config
 	)
 	default Color bankColor()
 	{
-		return Color.decode("#2E2E2E");
+		return Color.decode("#91893C");
 	}
 
 	@ConfigItem(
-			keyName = "textColor",
-			name = "Count Text Color",
-			description = "Configures the text color of the inventory total counter."
+			keyName = "opaqueBackground",
+			name = "Opaque Background",
+			description = "Configures whether or not the background is opaque."
 	)
-	default Color textColor()
+	default boolean opaqueBackground()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			keyName = "totalGpColor",
+			name = "Total Gp Color",
+			description = "Configures the text color of the total gp counter."
+	)
+	default Color totalGpColor()
 	{
 		return Color.decode("#FFFFFF");
 	}
 
-	@Alpha
 	@ConfigItem(
-			keyName = "borderColor",
-			name = "Container Border Color",
-			description = "Configures the containers border color."
+			keyName = "runTimeColor",
+			name = "Run Time Color",
+			description = "Configures the text color of the elapsed run time."
 	)
-
-	default Color borderColor()
+	default Color runTimeColor()
 	{
-		return Color.decode("#000000");
-	}
-
-	@ConfigItem(
-			keyName = "showBorder",
-			name = "Container Border",
-			description = "Configures whether or not the container has a border."
-	)
-	default boolean showBorder()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-			keyName = "fixedSize",
-			name = "Fixed Size",
-			description = "Configures whether or not the container is a fixed size or matches the text."
-	)
-	default boolean isFixedSize()
-	{
-		return true;
+		return Color.decode("#FFFFFF");
 	}
 
 	@ConfigItem(
@@ -118,27 +103,17 @@ public interface InventoryTotalConfig extends Config
 	)
 	default boolean showOnEmpty()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
-			keyName = "inventoryGap",
-			name = "Inventory Gap",
-			description = "Configures how much of a gap there is between the total and inventory."
+			keyName = "inventoryOffset",
+			name = "Inventory Offset",
+			description = "Configures where the total is positioned relative to the inventory."
 	)
 	default int inventoryGap()
 	{
-		return 10;
-	}
-
-	@ConfigItem(
-			keyName = "roundedCorners",
-			name = "Rounded Corners",
-			description = "Configures whether or not the container has rounded corners."
-	)
-	default boolean hasRoundedCorners()
-	{
-		return true;
+		return 16;
 	}
 
 	@ConfigItem(
@@ -148,6 +123,26 @@ public interface InventoryTotalConfig extends Config
 	)
 	default InventoryTotalAlignment horizontalAlignment()
 	{
-		return InventoryTotalAlignment.CENTER;
+		return InventoryTotalAlignment.RIGHT;
+	}
+
+	@ConfigItem(
+			keyName = "showRunTime",
+			name = "Show Run Time",
+			description = "Configures whether or not the run time is displayed."
+	)
+	default boolean showRunTime()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			keyName = "runTimeStartThreshold",
+			name = "Run Time Start Threshold",
+			description = "Configures the number of seconds it takes to be considered a run."
+	)
+	default int runTimeStartThreshold()
+	{
+		return 0;
 	}
 }
