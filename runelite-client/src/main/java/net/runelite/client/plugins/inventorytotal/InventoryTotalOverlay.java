@@ -45,8 +45,8 @@ class InventoryTotalOverlay extends Overlay
 	private static final int CORNER_RADIUS = 10;
 	private static final int TEXT_Y_OFFSET = 16;
 	private static final int INVENTORY_GAP_OFFSET = 6;
-	private static final String RUN_TIME_FORMAT = "%02d:%02d:%02d";
-	private static final String RUN_TIME_NO_HOURS_FORMAT = "%02d:%02d";
+	private static final String PROFIT_LOSS_TIME_FORMAT = "%02d:%02d:%02d";
+	private static final String PROFIT_LOSS_TIME_NO_HOURS_FORMAT = "%02d:%02d";
 
 	private final Client client;
 	private final InventoryTotalPlugin plugin;
@@ -66,8 +66,17 @@ class InventoryTotalOverlay extends Overlay
 		this.config = config;
 	}
 
-	private void updatePluginState()
+	void updatePluginState()
 	{
+		if (config.enableProfitLoss())
+		{
+			plugin.setMode(InventoryTotalMode.PROFIT_LOSS);
+		}
+		else
+		{
+			plugin.setMode(InventoryTotalMode.TOTAL);
+		}
+
 		int [] totals = plugin.getTotals();
 
 		plugin.setTotalGp(totals[InventoryTotalPlugin.TOTAL_GP_INDEX]);
@@ -151,7 +160,7 @@ class InventoryTotalOverlay extends Overlay
 	}
 
 	private void renderTotal(InventoryTotalConfig config, Graphics2D graphics, InventoryTotalPlugin plugin,
-							 Widget inventoryWidget, int profitGp, int totalQty, String totalText,
+							 Widget inventoryWidget, long profitGp, long totalQty, String totalText,
 							 String runTimeText, int height)
 	{
 		if (totalQty == 0 && !config.showOnEmpty())
@@ -190,9 +199,9 @@ class InventoryTotalOverlay extends Overlay
 
 		int y = inventoryWidget.getCanvasLocation().getY() - height - config.inventoryGap() + INVENTORY_GAP_OFFSET;
 
-		Color backgroundColor = config.bankColor();
+		Color backgroundColor = config.totalColor();
 
-		if (plugin.getState() == InventoryTotalState.RUN)
+		if (plugin.getState() == InventoryTotalState.RUN && plugin.getMode() == InventoryTotalMode.PROFIT_LOSS)
 		{
 			if (profitGp >= 0)
 			{
@@ -212,16 +221,22 @@ class InventoryTotalOverlay extends Overlay
 
 		backgroundColor = new Color(backgroundColor.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue(), opacity);
 
+		int cornerRadius = CORNER_RADIUS;
+		if (!config.roundCorners())
+		{
+			cornerRadius = 0;
+		}
+
 		int containerAlpha = backgroundColor.getAlpha();
 
 		if (containerAlpha > 0) {
 			graphics.setColor(Color.BLACK);
-			graphics.drawRoundRect(x, y, width, height, CORNER_RADIUS, CORNER_RADIUS);
+			graphics.drawRoundRect(x, y, width, height, cornerRadius, cornerRadius);
 		}
 
 		graphics.setColor(backgroundColor);
 
-		graphics.fillRoundRect(x, y, width, height, CORNER_RADIUS, CORNER_RADIUS);
+		graphics.fillRoundRect(x, y, width, height, cornerRadius, cornerRadius);
 
 		TextComponent textComponent = new TextComponent();
 
@@ -243,26 +258,26 @@ class InventoryTotalOverlay extends Overlay
 
 	private String getFormattedGp()
 	{
-		int total = plugin.getProfitGp();
+		long total = plugin.getProfitGp();
 
-		if (total >= 1000000000)
+		if (total >= 1000000000 || total <= -1000000000)
 		{
-			float bTotal = total / 1000000000f;
-			return String.format("%.1f", bTotal) + "B";
+			double bTotal = total / 1000000000.0;
+			return getTruncatedTotal(bTotal) + "B";
 		}
 		else
 		{
-			if (total >= 1000000)
+			if (total >= 1000000 || total <= -1000000)
 			{
-				float mTotal = total / 1000000f;
-				return String.format("%.1f", mTotal) + "M";
+				double mTotal = total / 1000000.0;
+				return getTruncatedTotal(mTotal) + "M";
 			}
 			else
 			{
-				if (total >= 1000)
+				if (total >= 1000 || total <= -1000)
 				{
-					float kTotal = total / 1000f;
-					return String.format("%.1f", kTotal) + "K";
+					double kTotal = total / 1000.0;
+					return getTruncatedTotal(kTotal) + "K";
 				}
 				else
 				{
@@ -272,6 +287,19 @@ class InventoryTotalOverlay extends Overlay
 		}
 	}
 
+	private String getTruncatedTotal(double total)
+	{
+		String totalString = Double.toString(total);
+
+		int dotIndex = totalString.indexOf('.');
+		if (dotIndex < totalString.length() - 1)
+		{
+			return totalString.substring(0, dotIndex + 2);
+		}
+
+		return totalString;
+	}
+
 	private String getExactFormattedGp()
 	{
 		return NumberFormat.getInstance(Locale.ENGLISH).format(plugin.getProfitGp());
@@ -279,13 +307,13 @@ class InventoryTotalOverlay extends Overlay
 
 	private String getFormattedRunTime()
 	{
-		long runTime = plugin.elapsedRunTime();
-		if (runTime == InventoryTotalPlugin.NO_RUN_TIME)
+		long profitLossTime = plugin.elapsedProfitLossTime();
+		if (profitLossTime == InventoryTotalPlugin.NO_PROFIT_LOSS_TIME)
 		{
 			return null;
 		}
 
-		long totalSecs = runTime / 1000;
+		long totalSecs = profitLossTime / 1000;
 		long totalMins = totalSecs / 60;
 
 		long hrs = totalMins / 60;
@@ -294,17 +322,12 @@ class InventoryTotalOverlay extends Overlay
 
 		if (hrs > 0)
 		{
-			return String.format(RUN_TIME_FORMAT, hrs, mins, secs);
+			return String.format(PROFIT_LOSS_TIME_FORMAT, hrs, mins, secs);
 		}
 		else
 		{
-			return String.format(RUN_TIME_NO_HOURS_FORMAT, mins, secs);
+			return String.format(PROFIT_LOSS_TIME_NO_HOURS_FORMAT, mins, secs);
 		}
-	}
-
-	public Widget getInventoryWidget()
-	{
-		return inventoryWidget;
 	}
 
 	public ItemContainer getItemContainer()

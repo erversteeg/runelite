@@ -32,9 +32,11 @@ import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.statusbars.StatusBarsConfig;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -51,7 +53,7 @@ public class InventoryTotalPlugin extends Plugin
 	private static final int COINS = ItemID.COINS_995;
 	static final int TOTAL_GP_INDEX = 0;
 	static final int TOTAL_QTY_INDEX = 1;
-	static final int NO_RUN_TIME = -1;
+	static final int NO_PROFIT_LOSS_TIME = -1;
 
 	@Inject
 	private InventoryTotalOverlay overlay;
@@ -71,12 +73,15 @@ public class InventoryTotalPlugin extends Plugin
 	@Inject
 	private ItemManager itemManager;
 
-	private int totalGp = 0;
-	private int totalQty = 0;
+	private long totalGp = 0;
+	private long totalQty = 0;
 
-	private Instant runStartTime;
+	private Instant profitLossStartTime;
 
-	private int initialGp = 0;
+	private long profitLossInitialGp = 0;
+	private long initialGp = 0;
+
+	private InventoryTotalMode mode = InventoryTotalMode.TOTAL;
 
 	private InventoryTotalState state = InventoryTotalState.NONE;
 	private InventoryTotalState prevState = InventoryTotalState.NONE;
@@ -95,13 +100,23 @@ public class InventoryTotalPlugin extends Plugin
 
 	void onNewRun()
 	{
-		runStartTime = Instant.now();
-		initialGp = totalGp;
+		profitLossStartTime = Instant.now();
+		profitLossInitialGp = totalGp;
+
+		if (mode == InventoryTotalMode.PROFIT_LOSS)
+		{
+			initialGp = profitLossInitialGp;
+		}
+		else
+		{
+			initialGp = 0;
+		}
 	}
 
 	void onBank()
 	{
-		runStartTime = null;
+		profitLossStartTime = null;
+		profitLossInitialGp = 0;
 		initialGp = 0;
 	}
 
@@ -160,6 +175,26 @@ public class InventoryTotalPlugin extends Plugin
 		return totals;
 	}
 
+	void setMode(InventoryTotalMode mode)
+	{
+		this.mode = mode;
+
+		switch(mode)
+		{
+			case TOTAL:
+				initialGp = 0;
+				break;
+			case PROFIT_LOSS:
+				initialGp = profitLossInitialGp;
+				break;
+		}
+	}
+
+	public InventoryTotalMode getMode()
+	{
+		return mode;
+	}
+
 	void setState(InventoryTotalState state)
 	{
 		this.prevState = this.state;
@@ -176,46 +211,36 @@ public class InventoryTotalPlugin extends Plugin
 		return prevState;
 	}
 
-	public int getProfitGp()
+	public long getProfitGp()
 	{
 		return totalGp - initialGp;
 	}
 
-	void setTotalGp(int totalGp)
+	void setTotalGp(long totalGp)
 	{
 		this.totalGp = totalGp;
 	}
 
-	void setTotalQty(int totalQty)
+	void setTotalQty(long totalQty)
 	{
 		this.totalQty = totalQty;
 	}
 
-	public int getTotalQty()
+	public long getTotalQty()
 	{
 		return totalQty;
 	}
 
-	long elapsedRunTime()
+	long elapsedProfitLossTime()
 	{
-		if (runStartTime == null || !config.showRunTime())
+		if (profitLossStartTime == null || mode == InventoryTotalMode.TOTAL || !config.showProfitLossTime())
 		{
-			return NO_RUN_TIME;
+			return NO_PROFIT_LOSS_TIME;
 		}
 
-		long elapsedRunTime = Instant
+		return Instant
 				.now()
-				.minusMillis(runStartTime.toEpochMilli())
+				.minusMillis(profitLossStartTime.toEpochMilli())
 				.toEpochMilli();
-
-		long elapsedSecs = elapsedRunTime / 1000;
-		int startThreshold = config.runTimeStartThreshold();
-
-		if (elapsedSecs < startThreshold)
-		{
-			return NO_RUN_TIME;
-		}
-
-		return elapsedRunTime;
 	}
 }

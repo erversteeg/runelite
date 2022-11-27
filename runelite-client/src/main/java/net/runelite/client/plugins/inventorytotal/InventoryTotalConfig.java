@@ -39,7 +39,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "profitBackgroundColor",
 			name = "Profit Color",
-			description = "Configures the background color of the counter when gaining gp."
+			description = "Configures the background color of the counter when gaining gp in Profit / Loss mode."
 	)
 	default Color profitColor()
 	{
@@ -49,7 +49,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "lossBackgroundColor",
 			name = "Loss Color",
-			description = "Configures the background color of the counter when losing gp."
+			description = "Configures the background color of the counter when losing gp in Profit / Loss mode."
 	)
 	default Color lossColor()
 	{
@@ -58,10 +58,10 @@ public interface InventoryTotalConfig extends Config
 
 	@ConfigItem(
 			keyName = "bankBackgroundColor",
-			name = "Bank Color",
-			description = "Configures the background color of the counter when the bank is open."
+			name = "Total Color",
+			description = "Configures the background color of the counter."
 	)
-	default Color bankColor()
+	default Color totalColor()
 	{
 		return Color.decode("#938E5C");
 	}
@@ -97,6 +97,16 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "roundedCorners",
+			name = "Rounded Corners",
+			description = "Configures whether or not the total has rounded corners."
+	)
+	default boolean roundCorners()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 			keyName = "showWhenEmpty",
 			name = "Show On Empty",
 			description = "Configures whether or not the total is shown when there are no items in the inventory."
@@ -127,23 +137,23 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "showRunTime",
-			name = "Show Run Time",
-			description = "Configures whether or not the run time is displayed."
+			keyName = "enableProfitLoss",
+			name = "Profit / Loss",
+			description = "Configures whether or not the total runs in profit / loss."
 	)
-	default boolean showRunTime()
+	default boolean enableProfitLoss()
 	{
 		return false;
 	}
 
 	@ConfigItem(
-			keyName = "StartThreshold",
-			name = "Start Threshold",
-			description = "Configures the number of seconds it takes to be considered a run."
+			keyName = "showProfitLossTime",
+			name = "Show Profit / Loss Time",
+			description = "Configures whether or not the run time is displayed."
 	)
-	default int runTimeStartThreshold()
+	default boolean showProfitLossTime()
 	{
-		return 0;
+		return false;
 	}
 
 	@ConfigItem(
