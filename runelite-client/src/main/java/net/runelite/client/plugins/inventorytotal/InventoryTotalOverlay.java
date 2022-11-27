@@ -118,15 +118,23 @@ class InventoryTotalOverlay extends Overlay
 			return null;
 		}
 
-		final TextComponent textComponent = new TextComponent();
-
-		textComponent.setText(String.valueOf(plugin.getProfitGp()));
-		textComponent.setPosition(new Point(0, 0));
-		textComponent.render(graphics);
-
 		int height = 20;
 
-		String totalText = NumberFormat.getInstance(Locale.ENGLISH).format(plugin.getProfitGp()) + " gp";
+		String totalText;
+		if (config.showExactGp())
+		{
+			totalText = getExactFormattedGp();
+		}
+		else
+		{
+			totalText = getFormattedGp();
+			totalText = totalText.replace(".0", "");
+		}
+
+		if (config.showGpUnit())
+		{
+			totalText += " gp";
+		}
 
 		String formattedRunTime = getFormattedRunTime();
 		String runTimeText = null;
@@ -231,6 +239,42 @@ class InventoryTotalOverlay extends Overlay
 			textComponent.setPosition(new Point((x + width) - 10 - actualRunTimeWidth, y + TEXT_Y_OFFSET));
 			textComponent.render(graphics);
 		}
+	}
+
+	private String getFormattedGp()
+	{
+		int total = plugin.getProfitGp();
+
+		if (total >= 1000000000)
+		{
+			float bTotal = total / 1000000000f;
+			return String.format("%.1f", bTotal) + "B";
+		}
+		else
+		{
+			if (total >= 1000000)
+			{
+				float mTotal = total / 1000000f;
+				return String.format("%.1f", mTotal) + "M";
+			}
+			else
+			{
+				if (total >= 1000)
+				{
+					float kTotal = total / 1000f;
+					return String.format("%.1f", kTotal) + "K";
+				}
+				else
+				{
+					return getExactFormattedGp();
+				}
+			}
+		}
+	}
+
+	private String getExactFormattedGp()
+	{
+		return NumberFormat.getInstance(Locale.ENGLISH).format(plugin.getProfitGp());
 	}
 
 	private String getFormattedRunTime()

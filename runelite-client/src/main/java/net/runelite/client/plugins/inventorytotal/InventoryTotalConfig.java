@@ -43,7 +43,7 @@ public interface InventoryTotalConfig extends Config
 	)
 	default Color profitColor()
 	{
-		return Color.decode("#268736");
+		return Color.decode("#56805C");
 	}
 
 	@ConfigItem(
@@ -53,7 +53,7 @@ public interface InventoryTotalConfig extends Config
 	)
 	default Color lossColor()
 	{
-		return Color.decode("#87182F");
+		return Color.decode("#864E58");
 	}
 
 	@ConfigItem(
@@ -63,7 +63,7 @@ public interface InventoryTotalConfig extends Config
 	)
 	default Color bankColor()
 	{
-		return Color.decode("#91893C");
+		return Color.decode("#938E5C");
 	}
 
 	@ConfigItem(
@@ -113,7 +113,7 @@ public interface InventoryTotalConfig extends Config
 	)
 	default int inventoryGap()
 	{
-		return 16;
+		return 18;
 	}
 
 	@ConfigItem(
@@ -137,12 +137,32 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "runTimeStartThreshold",
-			name = "Run Time Start Threshold",
+			keyName = "StartThreshold",
+			name = "Start Threshold",
 			description = "Configures the number of seconds it takes to be considered a run."
 	)
 	default int runTimeStartThreshold()
 	{
 		return 0;
+	}
+
+	@ConfigItem(
+			keyName = "showExactGp",
+			name = "Show Exact Gp",
+			description = "Configures whether or not the exact gp amount is displayed."
+	)
+	default boolean showExactGp()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			keyName = "showGpUnit",
+			name = "Show Gp Unit",
+			description = "Configures whether or not to display the gp unit for exact totals."
+	)
+	default boolean showGpUnit()
+	{
+		return true;
 	}
 }
