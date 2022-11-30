@@ -26,21 +26,17 @@ package net.runelite.client.plugins.inventorytotal;
 
 import com.google.inject.Provides;
 import net.runelite.api.*;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
-import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.statusbars.StatusBarsConfig;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 @PluginDescriptor(
 	name = "Inventory Total",
@@ -126,9 +122,9 @@ public class InventoryTotalPlugin extends Plugin
 		return configManager.getConfig(InventoryTotalConfig.class);
 	}
 
-	int [] getTotals()
+	int [] getInventoryTotals()
 	{
-		final ItemContainer itemContainer = overlay.getItemContainer();
+		final ItemContainer itemContainer = overlay.getInventoryItemContainer();
 
 		if (itemContainer == null)
 		{
@@ -137,12 +133,13 @@ public class InventoryTotalPlugin extends Plugin
 
 		final Item[] items = itemContainer.getItems();
 
+		final LinkedList<Item> allItems = new LinkedList<>(Arrays.asList(items));
+
 		int totalQty = 0;
 		int totalGp = 0;
 
-		for (int i = 0; i < items.length; i++)
+		for (Item item: allItems)
 		{
-			Item item = items[i];
 			int itemId = item.getId();
 
 			final ItemComposition itemComposition = itemManager.getItemComposition(itemId);
@@ -167,12 +164,62 @@ public class InventoryTotalPlugin extends Plugin
 			totalQty += itemQty;
 		}
 
-		int [] totals = new int[2];
+		int[] totals = new int[2];
 
 		totals[TOTAL_GP_INDEX] = totalGp;
 		totals[TOTAL_QTY_INDEX] = totalQty;
 
 		return totals;
+	}
+
+	int getEquipmentTotal()
+	{
+		ItemContainer itemContainer = overlay.getEquipmentItemContainer();
+
+		Item ring = itemContainer.getItem(EquipmentInventorySlot.RING.getSlotIdx());
+		Item ammo = itemContainer.getItem(EquipmentInventorySlot.AMMO.getSlotIdx());
+
+		Player player = client.getLocalPlayer();
+
+		int [] ids = player.getPlayerComposition().getEquipmentIds();
+
+		LinkedList<Integer> eIds = new LinkedList<>();
+
+		for (int id: ids)
+		{
+			if (id < 512)
+			{
+				continue;
+			}
+
+			eIds.add(id - 512);
+		}
+
+		if (ring != null)
+		{
+			eIds.add(ring.getId());
+		}
+
+		if (ammo != null)
+		{
+			eIds.add(ammo.getId());
+		}
+
+		int eTotal = 0;
+		for (int itemId: eIds)
+		{
+			int qty = 1;
+			if (ammo != null && itemId == ammo.getId())
+			{
+				qty = ammo.getQuantity();
+			}
+
+			int price = qty * itemManager.getItemPrice(itemId);
+
+			eTotal += price;
+		}
+
+		return eTotal;
 	}
 
 	void setMode(InventoryTotalMode mode)

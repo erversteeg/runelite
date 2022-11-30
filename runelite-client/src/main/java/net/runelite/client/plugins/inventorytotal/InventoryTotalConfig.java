@@ -43,7 +43,7 @@ public interface InventoryTotalConfig extends Config
 	)
 	default Color profitColor()
 	{
-		return Color.decode("#56805C");
+		return Color.decode("#42834C");
 	}
 
 	@ConfigItem(
@@ -53,13 +53,13 @@ public interface InventoryTotalConfig extends Config
 	)
 	default Color lossColor()
 	{
-		return Color.decode("#864E58");
+		return Color.decode("#803442");
 	}
 
 	@ConfigItem(
 			keyName = "bankBackgroundColor",
 			name = "Total Color",
-			description = "Configures the background color of the counter."
+			description = "Configures the background color of the counter when the inventory total is displayed."
 	)
 	default Color totalColor()
 	{
@@ -128,8 +128,8 @@ public interface InventoryTotalConfig extends Config
 
 	@ConfigItem(
 			keyName = "showProfitLossTime",
-			name = "Show Profit / Loss Time",
-			description = "Configures whether or not the run time is displayed."
+			name = "Show Profit / Loss Timer",
+			description = "Configures whether or not the profit / loss timer is displayed."
 	)
 	default boolean showProfitLossTime()
 	{

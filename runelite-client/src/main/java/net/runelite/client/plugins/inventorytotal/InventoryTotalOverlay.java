@@ -43,7 +43,7 @@ import java.util.Locale;
 class InventoryTotalOverlay extends Overlay
 {
 	private static final int CORNER_RADIUS = 10;
-	private static final int TEXT_Y_OFFSET = 16;
+	private static final int TEXT_Y_OFFSET = 17;
 	private static final int INVENTORY_GAP_OFFSET = 6;
 	private static final String PROFIT_LOSS_TIME_FORMAT = "%02d:%02d:%02d";
 	private static final String PROFIT_LOSS_TIME_NO_HOURS_FORMAT = "%02d:%02d";
@@ -53,7 +53,10 @@ class InventoryTotalOverlay extends Overlay
 	private final InventoryTotalConfig config;
 
 	private Widget inventoryWidget;
-	private ItemContainer itemContainer;
+	private ItemContainer inventoryItemContainer;
+	private ItemContainer equipmentItemContainer;
+
+	private boolean onceBank = false;
 
 	@Inject
 	private InventoryTotalOverlay(Client client, InventoryTotalPlugin plugin, InventoryTotalConfig config)
@@ -68,7 +71,12 @@ class InventoryTotalOverlay extends Overlay
 
 	void updatePluginState()
 	{
-		if (config.enableProfitLoss())
+		inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
+
+		inventoryItemContainer = client.getItemContainer(InventoryID.INVENTORY);
+		equipmentItemContainer = client.getItemContainer(InventoryID.EQUIPMENT);
+
+		if (config.enableProfitLoss() && onceBank)
 		{
 			plugin.setMode(InventoryTotalMode.PROFIT_LOSS);
 		}
@@ -76,13 +84,6 @@ class InventoryTotalOverlay extends Overlay
 		{
 			plugin.setMode(InventoryTotalMode.TOTAL);
 		}
-
-		int [] totals = plugin.getTotals();
-
-		plugin.setTotalGp(totals[InventoryTotalPlugin.TOTAL_GP_INDEX]);
-		plugin.setTotalQty(totals[InventoryTotalPlugin.TOTAL_QTY_INDEX]);
-
-		inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
 
 		boolean isBank = false;
 
@@ -92,6 +93,10 @@ class InventoryTotalOverlay extends Overlay
 			if (inventoryWidget != null && !inventoryWidget.isHidden())
 			{
 				isBank = true;
+				if (!onceBank)
+				{
+					onceBank = true;
+				}
 			}
 		}
 
@@ -104,6 +109,22 @@ class InventoryTotalOverlay extends Overlay
 			plugin.setState(InventoryTotalState.RUN);
 		}
 
+		int [] inventoryTotals = plugin.getInventoryTotals();
+
+		int inventoryTotal = inventoryTotals[InventoryTotalPlugin.TOTAL_GP_INDEX];
+		int equipmentTotal = plugin.getEquipmentTotal();
+
+		int inventoryQty = inventoryTotals[InventoryTotalPlugin.TOTAL_QTY_INDEX];
+
+		int totalGp = inventoryTotal;
+		if (plugin.getState() == InventoryTotalState.RUN && plugin.getMode() == InventoryTotalMode.PROFIT_LOSS)
+		{
+			totalGp += equipmentTotal;
+		}
+
+		plugin.setTotalGp(totalGp);
+		plugin.setTotalQty(inventoryQty);
+
 		if (plugin.getPreviousState() == InventoryTotalState.BANK && plugin.getState() == InventoryTotalState.RUN)
 		{
 			plugin.onNewRun();
@@ -112,8 +133,6 @@ class InventoryTotalOverlay extends Overlay
 		{
 			plugin.onBank();
 		}
-
-		itemContainer = client.getItemContainer(InventoryID.INVENTORY);
 	}
 
 	@Override
@@ -122,7 +141,7 @@ class InventoryTotalOverlay extends Overlay
 		updatePluginState();
 
 		boolean isInvHidden = inventoryWidget == null || inventoryWidget.isHidden();
-		if (isInvHidden || itemContainer == null)
+		if (isInvHidden || inventoryItemContainer == null)
 		{
 			return null;
 		}
@@ -330,8 +349,13 @@ class InventoryTotalOverlay extends Overlay
 		}
 	}
 
-	public ItemContainer getItemContainer()
+	public ItemContainer getInventoryItemContainer()
 	{
-		return itemContainer;
+		return inventoryItemContainer;
+	}
+
+	public ItemContainer getEquipmentItemContainer()
+	{
+		return equipmentItemContainer;
 	}
 }
