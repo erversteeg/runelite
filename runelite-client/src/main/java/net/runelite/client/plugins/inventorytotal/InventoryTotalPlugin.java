@@ -36,11 +36,13 @@ import net.runelite.client.ui.overlay.OverlayManager;
 import javax.inject.Inject;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 @PluginDescriptor(
 	name = "Inventory Total",
-	description = "Shows total value of items in the player's inventory.",
+	description = "Shows the total GE value of items in your inventory.",
 	enabledByDefault = false
 )
 
@@ -74,6 +76,8 @@ public class InventoryTotalPlugin extends Plugin
 
 	private Instant profitLossStartTime;
 
+	private Map<Integer, Integer> itemPrices = new HashMap<>();
+
 	private long profitLossInitialGp = 0;
 	private long initialGp = 0;
 
@@ -97,7 +101,12 @@ public class InventoryTotalPlugin extends Plugin
 	void onNewRun()
 	{
 		profitLossStartTime = Instant.now();
+
 		profitLossInitialGp = totalGp;
+		if (mode == InventoryTotalMode.TOTAL)
+		{
+			profitLossInitialGp += getEquipmentTotal();
+		}
 
 		if (mode == InventoryTotalMode.PROFIT_LOSS)
 		{
@@ -147,21 +156,36 @@ public class InventoryTotalPlugin extends Plugin
 			final boolean isNoted = itemComposition.getNote() != -1;
 			final int realItemId = isNoted ? itemComposition.getLinkedNoteId() : itemId;
 
+			int totalPrice;
 			int gePrice;
+
+			if (itemPrices.containsKey(realItemId))
+			{
+				gePrice = itemPrices.get(realItemId);
+			}
+			else
+			{
+				gePrice = itemManager.getItemPrice(realItemId);
+			}
 
 			int itemQty = item.getQuantity();
 
 			if (realItemId == COINS)
 			{
-				gePrice = itemQty;
+				totalPrice = itemQty;
 			}
 			else
 			{
-				gePrice = itemQty * itemManager.getItemPrice(realItemId);
+				totalPrice = itemQty * gePrice;
 			}
 
-			totalGp += gePrice;
+			totalGp += totalPrice;
 			totalQty += itemQty;
+
+			if (realItemId != COINS && !itemPrices.containsKey(realItemId))
+			{
+				itemPrices.put(realItemId, gePrice);
+			}
 		}
 
 		int[] totals = new int[2];
@@ -214,9 +238,25 @@ public class InventoryTotalPlugin extends Plugin
 				qty = ammo.getQuantity();
 			}
 
-			int price = qty * itemManager.getItemPrice(itemId);
+			int gePrice;
 
-			eTotal += price;
+			if (itemPrices.containsKey(itemId))
+			{
+				gePrice = itemPrices.get(itemId);
+			}
+			else
+			{
+				gePrice = itemManager.getItemPrice(itemId);
+			}
+
+			int totalPrice = qty * gePrice;
+
+			eTotal += totalPrice;
+
+			if (!itemPrices.containsKey(itemId))
+			{
+				itemPrices.put(itemId, gePrice);
+			}
 		}
 
 		return eTotal;
@@ -276,6 +316,11 @@ public class InventoryTotalPlugin extends Plugin
 	public long getTotalQty()
 	{
 		return totalQty;
+	}
+
+	public Map<Integer, Integer> getItemPrices()
+	{
+		return itemPrices;
 	}
 
 	long elapsedProfitLossTime()

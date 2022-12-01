@@ -109,6 +109,14 @@ class InventoryTotalOverlay extends Overlay
 			plugin.setState(InventoryTotalState.RUN);
 		}
 
+		// before totals
+		boolean newRun = plugin.getPreviousState() == InventoryTotalState.BANK && plugin.getState() == InventoryTotalState.RUN;
+		if (newRun)
+		{
+			plugin.getItemPrices().clear();
+		}
+
+		// totals
 		int [] inventoryTotals = plugin.getInventoryTotals();
 
 		int inventoryTotal = inventoryTotals[InventoryTotalPlugin.TOTAL_GP_INDEX];
@@ -125,7 +133,8 @@ class InventoryTotalOverlay extends Overlay
 		plugin.setTotalGp(totalGp);
 		plugin.setTotalQty(inventoryQty);
 
-		if (plugin.getPreviousState() == InventoryTotalState.BANK && plugin.getState() == InventoryTotalState.RUN)
+		// after totals
+		if (newRun)
 		{
 			plugin.onNewRun();
 		}

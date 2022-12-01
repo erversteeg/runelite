@@ -24,7 +24,6 @@
  */
 package net.runelite.client.plugins.inventorytotal;
 
-import net.runelite.client.config.Alpha;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -39,7 +38,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "profitBackgroundColor",
 			name = "Profit Color",
-			description = "Configures the background color of the counter when gaining gp in Profit / Loss mode."
+			description = "Configures the background color of the counter box when gaining gp in Profit / Loss mode."
 	)
 	default Color profitColor()
 	{
@@ -49,7 +48,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "lossBackgroundColor",
 			name = "Loss Color",
-			description = "Configures the background color of the counter when losing gp in Profit / Loss mode."
+			description = "Configures the background color of the counter box when losing gp in Profit / Loss mode."
 	)
 	default Color lossColor()
 	{
@@ -57,9 +56,9 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "bankBackgroundColor",
+			keyName = "totalBackgroundColor",
 			name = "Total Color",
-			description = "Configures the background color of the counter when the inventory total is displayed."
+			description = "Configures the background color of the counter box when showing the inventory total."
 	)
 	default Color totalColor()
 	{
@@ -69,7 +68,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "opaqueBackground",
 			name = "Opaque Background",
-			description = "Configures whether or not the background is opaque."
+			description = "Configures whether or not the counter box background is opaque."
 	)
 	default boolean opaqueBackground()
 	{
@@ -79,7 +78,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "roundedCorners",
 			name = "Rounded Corners",
-			description = "Configures whether or not the total has rounded corners."
+			description = "Configures whether or not the counter box has round corners."
 	)
 	default boolean roundCorners()
 	{
@@ -89,7 +88,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "showWhenEmpty",
 			name = "Show On Empty",
-			description = "Configures whether or not the total is shown when there are no items in the inventory."
+			description = "Configures whether or not the counter box is shown when there are no items in the inventory."
 	)
 	default boolean showOnEmpty()
 	{
@@ -99,7 +98,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "inventoryOffset",
 			name = "Inventory Offset",
-			description = "Configures where the total is positioned relative to the inventory."
+			description = "Configures where the counter box is located relative to the inventory."
 	)
 	default int inventoryGap()
 	{
@@ -109,7 +108,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "horizontalAlignment",
 			name = "Alignment",
-			description = "Configures whether or not the container has rounded corners."
+			description = "Configures the alignment of the counter box."
 	)
 	default InventoryTotalAlignment horizontalAlignment()
 	{
@@ -119,7 +118,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "enableProfitLoss",
 			name = "Profit / Loss",
-			description = "Configures whether or not the total runs in profit / loss."
+			description = "Configures whether or not the counter runs in profit / loss or total mode."
 	)
 	default boolean enableProfitLoss()
 	{
@@ -128,8 +127,8 @@ public interface InventoryTotalConfig extends Config
 
 	@ConfigItem(
 			keyName = "showProfitLossTime",
-			name = "Show Profit / Loss Timer",
-			description = "Configures whether or not the profit / loss timer is displayed."
+			name = "Show Timer",
+			description = "Configures whether or not a profit / loss timer is shown in the counter box."
 	)
 	default boolean showProfitLossTime()
 	{
@@ -139,7 +138,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "showExactGp",
 			name = "Show Exact Gp",
-			description = "Configures whether or not the exact gp amount is displayed."
+			description = "Configures whether or not the exact gp total is shown in the counter box."
 	)
 	default boolean showExactGp()
 	{
@@ -149,7 +148,7 @@ public interface InventoryTotalConfig extends Config
 	@ConfigItem(
 			keyName = "showGpUnit",
 			name = "Show Gp Unit",
-			description = "Configures whether or not to display the gp unit for exact totals."
+			description = "Configures whether or not to show the gp unit."
 	)
 	default boolean showGpUnit()
 	{
