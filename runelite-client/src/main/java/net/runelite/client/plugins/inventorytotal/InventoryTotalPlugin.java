@@ -35,10 +35,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 @PluginDescriptor(
 	name = "Inventory Total",
@@ -49,6 +46,7 @@ import java.util.Map;
 public class InventoryTotalPlugin extends Plugin
 {
 	private static final int COINS = ItemID.COINS_995;
+	private static final int BANK_CLOSE_DELAY = 1200;
 	static final int TOTAL_GP_INDEX = 0;
 	static final int TOTAL_QTY_INDEX = 1;
 	static final int NO_PROFIT_LOSS_TIME = -1;
@@ -100,22 +98,31 @@ public class InventoryTotalPlugin extends Plugin
 
 	void onNewRun()
 	{
-		profitLossStartTime = Instant.now();
+		overlay.hide();
+		// to handle same tick bank closing
+		new Timer().schedule(new TimerTask() {
+			@Override
+			public void run() {
+				profitLossStartTime = Instant.now();
 
-		profitLossInitialGp = totalGp;
-		if (mode == InventoryTotalMode.TOTAL)
-		{
-			profitLossInitialGp += getEquipmentTotal();
-		}
+				profitLossInitialGp = totalGp;
+				if (mode == InventoryTotalMode.TOTAL)
+				{
+					profitLossInitialGp += getEquipmentTotal();
+				}
 
-		if (mode == InventoryTotalMode.PROFIT_LOSS)
-		{
-			initialGp = profitLossInitialGp;
-		}
-		else
-		{
-			initialGp = 0;
-		}
+				if (mode == InventoryTotalMode.PROFIT_LOSS)
+				{
+					initialGp = profitLossInitialGp;
+				}
+				else
+				{
+					initialGp = 0;
+				}
+
+				overlay.show();
+			}
+		}, BANK_CLOSE_DELAY);
 	}
 
 	void onBank()

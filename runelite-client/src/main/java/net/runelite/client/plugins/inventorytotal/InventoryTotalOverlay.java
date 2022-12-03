@@ -58,6 +58,8 @@ class InventoryTotalOverlay extends Overlay
 
 	private boolean onceBank = false;
 
+	private boolean isVisible = true;
+
 	@Inject
 	private InventoryTotalOverlay(Client client, InventoryTotalPlugin plugin, InventoryTotalConfig config)
 	{
@@ -179,6 +181,11 @@ class InventoryTotalOverlay extends Overlay
 		if (formattedRunTime != null)
 		{
 			runTimeText = " (" + formattedRunTime + ")";
+		}
+
+		if (!isVisible)
+		{
+			return null;
 		}
 
 		renderTotal(config, graphics, plugin, inventoryWidget, plugin.getProfitGp(),
@@ -366,5 +373,15 @@ class InventoryTotalOverlay extends Overlay
 	public ItemContainer getEquipmentItemContainer()
 	{
 		return equipmentItemContainer;
+	}
+
+	public void show()
+	{
+		isVisible = true;
+	}
+
+	public void hide()
+	{
+		isVisible = false;
 	}
 }
