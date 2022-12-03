@@ -28,15 +28,18 @@ package net.runelite.client.plugins.inventorytotal;
 import net.runelite.api.*;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.TextComponent;
+import net.runelite.client.util.ImageUtil;
 
 import javax.inject.Inject;
 import java.awt.Point;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -47,10 +50,13 @@ class InventoryTotalOverlay extends Overlay
 	private static final int INVENTORY_GAP_OFFSET = 6;
 	private static final String PROFIT_LOSS_TIME_FORMAT = "%02d:%02d:%02d";
 	private static final String PROFIT_LOSS_TIME_NO_HOURS_FORMAT = "%02d:%02d";
+	private static final int HORIZONTAL_PADDING = 10;
 
 	private final Client client;
 	private final InventoryTotalPlugin plugin;
 	private final InventoryTotalConfig config;
+
+	private final ItemManager itemManager;
 
 	private Widget inventoryWidget;
 	private ItemContainer inventoryItemContainer;
@@ -61,7 +67,7 @@ class InventoryTotalOverlay extends Overlay
 	private boolean isVisible = true;
 
 	@Inject
-	private InventoryTotalOverlay(Client client, InventoryTotalPlugin plugin, InventoryTotalConfig config)
+	private InventoryTotalOverlay(Client client, InventoryTotalPlugin plugin, InventoryTotalConfig config, ItemManager itemManager)
 	{
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
@@ -69,6 +75,8 @@ class InventoryTotalOverlay extends Overlay
 		this.client = client;
 		this.plugin = plugin;
 		this.config = config;
+
+		this.itemManager = itemManager;
 	}
 
 	void updatePluginState()
@@ -170,11 +178,6 @@ class InventoryTotalOverlay extends Overlay
 			totalText = totalText.replace(".0", "");
 		}
 
-		if (config.showGpUnit())
-		{
-			totalText += " gp";
-		}
-
 		String formattedRunTime = getFormattedRunTime();
 		String runTimeText = null;
 
@@ -189,17 +192,32 @@ class InventoryTotalOverlay extends Overlay
 		}
 
 		renderTotal(config, graphics, plugin, inventoryWidget, plugin.getProfitGp(),
-				plugin.getTotalQty(), totalText, runTimeText, height);
+				plugin.getTotalQty(), plugin.getProfitGp(), totalText, runTimeText, height);
 
 		return null;
 	}
 
 	private void renderTotal(InventoryTotalConfig config, Graphics2D graphics, InventoryTotalPlugin plugin,
-							 Widget inventoryWidget, long profitGp, long totalQty, String totalText,
-							 String runTimeText, int height)
-	{
-		if (totalQty == 0 && !config.showOnEmpty())
+							 Widget inventoryWidget, long profitGp, long totalQty, long total, String totalText,
+							 String runTimeText, int height) {
+		int imageSize = 15;
+		boolean showCoinStack = config.showCoinStack() && total > 0;
+		int numCoins;
+		if (total > Integer.MAX_VALUE)
 		{
+			numCoins = Integer.MAX_VALUE;
+		}
+		else if (total < Integer.MIN_VALUE)
+		{
+			numCoins = Integer.MIN_VALUE;
+		}
+		else
+		{
+			numCoins = (int) total;
+		}
+		numCoins = Math.abs(numCoins);
+
+		if (totalQty == 0 && !config.showOnEmpty()) {
 			return;
 		}
 
@@ -208,14 +226,19 @@ class InventoryTotalOverlay extends Overlay
 
 		int fixedRunTimeWidth = 0;
 		int actualRunTimeWidth = 0;
+		int imageWidthWithPadding = 0;
 
-		if (runTimeText != null && runTimeText.length() >= 2)
-		{
+		if (runTimeText != null && runTimeText.length() >= 2) {
 			fixedRunTimeWidth = 5 * (runTimeText.length() - 2) + (3 * 2) + 5;
 			actualRunTimeWidth = graphics.getFontMetrics().stringWidth(runTimeText);
 		}
 
-		int width = totalWidth + fixedRunTimeWidth + 20;
+		if (showCoinStack)
+		{
+			imageWidthWithPadding = imageSize + 3;
+		}
+
+		int width = totalWidth + fixedRunTimeWidth + imageWidthWithPadding + HORIZONTAL_PADDING * 2;
 
 		int x = (inventoryWidget.getCanvasLocation().getX() + inventoryWidget.getWidth() / 2) - (width / 2);
 		switch (config.horizontalAlignment())
@@ -277,7 +300,7 @@ class InventoryTotalOverlay extends Overlay
 
 		textComponent.setColor(Color.WHITE);
 		textComponent.setText(totalText);
-		textComponent.setPosition(new Point(x + 10, y + TEXT_Y_OFFSET));
+		textComponent.setPosition(new Point(x + HORIZONTAL_PADDING, y + TEXT_Y_OFFSET));
 		textComponent.render(graphics);
 
 		if (runTimeText != null)
@@ -286,8 +309,17 @@ class InventoryTotalOverlay extends Overlay
 
 			textComponent.setColor(Color.WHITE);
 			textComponent.setText(runTimeText);
-			textComponent.setPosition(new Point((x + width) - 10 - actualRunTimeWidth, y + TEXT_Y_OFFSET));
+			textComponent.setPosition(new Point((x + width) - HORIZONTAL_PADDING - actualRunTimeWidth - imageWidthWithPadding, y + TEXT_Y_OFFSET));
 			textComponent.render(graphics);
+		}
+
+		if (showCoinStack)
+		{
+			int imageOffset = 3;
+
+			BufferedImage coinsImage = itemManager.getImage(ItemID.COINS_995, numCoins, false);
+			coinsImage = ImageUtil.resizeImage(coinsImage, imageSize, imageSize);
+			graphics.drawImage(coinsImage, (x + width) - HORIZONTAL_PADDING - imageSize + imageOffset, y + 3, null);
 		}
 	}
 

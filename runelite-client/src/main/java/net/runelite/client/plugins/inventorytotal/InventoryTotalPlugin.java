@@ -45,7 +45,7 @@ import java.util.*;
 
 public class InventoryTotalPlugin extends Plugin
 {
-	private static final int COINS = ItemID.COINS_995;
+	static final int COINS = ItemID.COINS_995;
 	private static final int BANK_CLOSE_DELAY = 1200;
 	static final int TOTAL_GP_INDEX = 0;
 	static final int TOTAL_QTY_INDEX = 1;

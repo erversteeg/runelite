@@ -62,7 +62,7 @@ public interface InventoryTotalConfig extends Config
 	)
 	default Color totalColor()
 	{
-		return Color.decode("#938E5C");
+		return Color.decode("#939393");
 	}
 
 	@ConfigItem(
@@ -72,7 +72,7 @@ public interface InventoryTotalConfig extends Config
 	)
 	default boolean opaqueBackground()
 	{
-		return false;
+		return true;
 	}
 
 	@ConfigItem(
@@ -146,11 +146,11 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "showGpUnit",
-			name = "Show Gp Unit",
-			description = "Configures whether or not to show the gp unit."
+			keyName = "showCoinStack",
+			name = "Show Coin Stack",
+			description = "Configures whether or not the coin stack is displayed."
 	)
-	default boolean showGpUnit()
+	default boolean showCoinStack()
 	{
 		return true;
 	}
