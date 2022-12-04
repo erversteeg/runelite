@@ -24,10 +24,13 @@
  */
 package net.runelite.client.plugins.inventorytotal;
 
+import com.google.gson.Gson;
 import com.google.inject.Provides;
 import net.runelite.api.*;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.RuneScapeProfileChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -69,25 +72,36 @@ public class InventoryTotalPlugin extends Plugin
 	@Inject
 	private ItemManager itemManager;
 
+	@Inject
+	private ConfigManager configManager;
+
+	@Inject
+	private Gson gson;
+
+	private String profileKey = "";
+
+	private InventoryTotalRunData runData;
+
 	private long totalGp = 0;
 	private long totalQty = 0;
 
-	private Instant runStartTime;
-
-	private Map<Integer, Integer> itemPrices = new HashMap<>();
-
-	private long profitLossInitialGp = 0;
 	private long initialGp = 0;
+
+	private long runStartTime = 0;
 
 	private InventoryTotalMode mode = InventoryTotalMode.TOTAL;
 
 	private InventoryTotalState state = InventoryTotalState.NONE;
 	private InventoryTotalState prevState = InventoryTotalState.NONE;
 
+	private long lastWriteSaveTime = 0;
+
 	@Override
 	protected void startUp() throws Exception
 	{
 		overlayManager.add(overlay);
+
+		runData = new InventoryTotalRunData();
 	}
 
 	@Override
@@ -96,30 +110,43 @@ public class InventoryTotalPlugin extends Plugin
 		overlayManager.remove(overlay);
 	}
 
+	@Subscribe
+	public void onRuneScapeProfileChanged(RuneScapeProfileChanged e)
+	{
+		profileKey = configManager.getRSProfileKey();
+		if (profileKey != null)
+		{
+			runData = getSavedData();
+		}
+	}
+
 	void onNewRun()
 	{
 		overlay.hide();
 
-		runStartTime = Instant.now();
+		runStartTime = Instant.now().toEpochMilli();
 
 		// to handle same tick bank closing
 		new Timer().schedule(new TimerTask() {
 			@Override
 			public void run() {
-				profitLossInitialGp = totalGp;
+				runData.profitLossInitialGp = totalGp;
+
 				if (mode == InventoryTotalMode.TOTAL)
 				{
-					profitLossInitialGp += getEquipmentTotal();
+					runData.profitLossInitialGp += getEquipmentTotal();
 				}
 
 				if (mode == InventoryTotalMode.PROFIT_LOSS)
 				{
-					initialGp = profitLossInitialGp;
+					initialGp = runData.profitLossInitialGp;
 				}
 				else
 				{
 					initialGp = 0;
 				}
+
+				writeSavedData();
 
 				overlay.show();
 			}
@@ -128,9 +155,13 @@ public class InventoryTotalPlugin extends Plugin
 
 	void onBank()
 	{
-		runStartTime = null;
-		profitLossInitialGp = 0;
+		runData.profitLossInitialGp = 0;
+		runData.itemPrices.clear();
+
 		initialGp = 0;
+		runStartTime = 0;
+
+		writeSavedData();
 	}
 
 	@Provides
@@ -167,9 +198,9 @@ public class InventoryTotalPlugin extends Plugin
 			int totalPrice;
 			int gePrice;
 
-			if (itemPrices.containsKey(realItemId))
+			if (runData.itemPrices.containsKey(realItemId))
 			{
-				gePrice = itemPrices.get(realItemId);
+				gePrice = runData.itemPrices.get(realItemId);
 			}
 			else
 			{
@@ -190,9 +221,10 @@ public class InventoryTotalPlugin extends Plugin
 			totalGp += totalPrice;
 			totalQty += itemQty;
 
-			if (realItemId != COINS && !itemPrices.containsKey(realItemId))
+			if (realItemId != COINS && !runData.itemPrices.containsKey(realItemId))
 			{
-				itemPrices.put(realItemId, gePrice);
+				runData.itemPrices.put(realItemId, gePrice);
+				writeSavedData();
 			}
 		}
 
@@ -248,9 +280,9 @@ public class InventoryTotalPlugin extends Plugin
 
 			int gePrice;
 
-			if (itemPrices.containsKey(itemId))
+			if (runData.itemPrices.containsKey(itemId))
 			{
-				gePrice = itemPrices.get(itemId);
+				gePrice = runData.itemPrices.get(itemId);
 			}
 			else
 			{
@@ -261,13 +293,45 @@ public class InventoryTotalPlugin extends Plugin
 
 			eTotal += totalPrice;
 
-			if (!itemPrices.containsKey(itemId))
+			if (!runData.itemPrices.containsKey(itemId))
 			{
-				itemPrices.put(itemId, gePrice);
+				runData.itemPrices.put(itemId, gePrice);
+				writeSavedData();
 			}
 		}
 
 		return eTotal;
+	}
+
+	// max invoke rate approximately once per tick
+	// mainly so that initially this isn't getting invoked multiple times after item prices are added to the map
+	void writeSavedData()
+	{
+		if (state == InventoryTotalState.BANK || Instant.now().toEpochMilli() - lastWriteSaveTime < 600)
+		{
+			return;
+		}
+
+		String profile = configManager.getRSProfileKey();
+
+		String json = gson.toJson(runData);
+		configManager.setConfiguration(InventoryTotalConfig.GROUP, profile, "inventory_total_data", json);
+
+		lastWriteSaveTime = Instant.now().toEpochMilli();
+	}
+
+	private InventoryTotalRunData getSavedData()
+	{
+		String profile = configManager.getRSProfileKey();
+		String json = configManager.getConfiguration(InventoryTotalConfig.GROUP, profile, "inventory_total_data");
+
+		InventoryTotalRunData savedData = gson.fromJson(json, InventoryTotalRunData.class);
+
+		if (savedData == null)
+		{
+			return new InventoryTotalRunData();
+		}
+		return savedData;
 	}
 
 	void setMode(InventoryTotalMode mode)
@@ -280,7 +344,7 @@ public class InventoryTotalPlugin extends Plugin
 				initialGp = 0;
 				break;
 			case PROFIT_LOSS:
-				initialGp = profitLossInitialGp;
+				initialGp = runData.profitLossInitialGp;
 				break;
 		}
 	}
@@ -326,21 +390,16 @@ public class InventoryTotalPlugin extends Plugin
 		return totalQty;
 	}
 
-	public Map<Integer, Integer> getItemPrices()
-	{
-		return itemPrices;
-	}
-
 	long elapsedRunTime()
 	{
-		if (runStartTime == null || mode == InventoryTotalMode.TOTAL || !config.showProfitLossTime())
+		if (runStartTime == 0 || mode == InventoryTotalMode.TOTAL || !config.showRunTime())
 		{
 			return NO_PROFIT_LOSS_TIME;
 		}
 
 		return Instant
 				.now()
-				.minusMillis(runStartTime.toEpochMilli())
+				.minusMillis(runStartTime)
 				.toEpochMilli();
 	}
 }

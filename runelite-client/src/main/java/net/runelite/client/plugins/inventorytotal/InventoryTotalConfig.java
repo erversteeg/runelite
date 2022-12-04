@@ -36,119 +36,10 @@ public interface InventoryTotalConfig extends Config
 	String GROUP = "inventorytotal";
 
 	@ConfigItem(
-			keyName = "profitBackgroundColor",
-			name = "Profit Color",
-			description = "Configures the background color of the counter box when gaining gp in Profit / Loss mode."
-	)
-	default Color profitColor()
-	{
-		return Color.decode("#42834C");
-	}
-
-	@ConfigItem(
-			keyName = "lossBackgroundColor",
-			name = "Loss Color",
-			description = "Configures the background color of the counter box when losing gp in Profit / Loss mode."
-	)
-	default Color lossColor()
-	{
-		return Color.decode("#803442");
-	}
-
-	@ConfigItem(
-			keyName = "totalBackgroundColor",
-			name = "Total Color",
-			description = "Configures the background color of the counter box when showing the inventory total."
-	)
-	default Color totalColor()
-	{
-		return Color.decode("#939393");
-	}
-
-	@ConfigItem(
-			keyName = "opaqueBackground",
-			name = "Opaque Background",
-			description = "Configures whether or not the counter box background is opaque."
-	)
-	default boolean opaqueBackground()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-			keyName = "roundedCorners",
-			name = "Rounded Corners",
-			description = "Configures whether or not the counter box has round corners."
-	)
-	default boolean roundCorners()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-			keyName = "showWhenEmpty",
-			name = "Show On Empty",
-			description = "Configures whether or not the counter box is shown when there are no items in the inventory."
-	)
-	default boolean showOnEmpty()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-			keyName = "inventoryOffsetX",
-			name = "Inventory Offset X",
-			description = "Configures where the counter box X-axis is located relative to the inventory."
-	)
-	default int inventoryXOffset()
-	{
-		return 0;
-	}
-
-	@ConfigItem(
-			keyName = "inventoryOffsetYNegative",
-			name = "Inventory Offset Y Negative",
-			description = "Configures where the counter box Y-axis offset is a negative number."
-	)
-	default boolean isInventoryYOffsetNegative()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-			keyName = "inventoryOffsetY",
-			name = "Inventory Offset Y",
-			description = "Configures where the counter box Y-axis is located relative to the inventory."
-	)
-	default int inventoryYOffset()
-	{
-		return 41;
-	}
-
-	@ConfigItem(
-			keyName = "inventoryOffsetXNegative",
-			name = "Inventory Offset X Negative",
-			description = "Configures where the counter box X-axis offset is a negative number."
-	)
-	default boolean isInventoryXOffsetNegative()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-			keyName = "horizontalAlignment",
-			name = "Alignment",
-			description = "Configures the alignment of the counter box."
-	)
-	default InventoryTotalAlignment horizontalAlignment()
-	{
-		return InventoryTotalAlignment.RIGHT;
-	}
-
-	@ConfigItem(
+			position = 0,
 			keyName = "enableProfitLoss",
 			name = "Profit / Loss",
-			description = "Configures whether or not the counter runs in profit / loss or total mode."
+			description = "Configures whether or not the total runs in profit / loss."
 	)
 	default boolean enableProfitLoss()
 	{
@@ -156,19 +47,142 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "showRunTime",
-			name = "Show Run Time",
-			description = "Configures whether or not the run time is shown."
+			position = 1,
+			keyName = "totalBackgroundColor",
+			name = "Background Color",
+			description = "Configures the background color of the total box."
 	)
-	default boolean showProfitLossTime()
+	default Color totalColor()
+	{
+		return Color.decode("#939393");
+	}
+
+	@ConfigItem(
+			position = 2,
+			keyName = "profitBackgroundColor",
+			name = "Profit Color",
+			description = "Configures the background color of the total box when gaining gp in profit / loss."
+	)
+	default Color profitColor()
+	{
+		return Color.decode("#42834C");
+	}
+
+	@ConfigItem(
+			position = 3,
+			keyName = "lossBackgroundColor",
+			name = "Loss Color",
+			description = "Configures the background color of the total box when losing gp in profit / loss."
+	)
+	default Color lossColor()
+	{
+		return Color.decode("#912A2A");
+	}
+
+	@ConfigItem(
+			position = 4,
+			keyName = "opaqueBackground",
+			name = "Opaque Background",
+			description = "Configures whether or not the total box background is opaque."
+	)
+	default boolean opaqueBackground()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			position = 5,
+			keyName = "roundedCorners",
+			name = "Rounded Corners",
+			description = "Configures whether or not the total box has rounded corners."
+	)
+	default boolean roundCorners()
 	{
 		return false;
 	}
 
 	@ConfigItem(
+			position = 6,
+			keyName = "horizontalAlignment",
+			name = "Alignment",
+			description = "Configures the alignment of the total box."
+	)
+	default InventoryTotalAlignment horizontalAlignment()
+	{
+		return InventoryTotalAlignment.CENTER;
+	}
+
+	@ConfigItem(
+			position = 7,
+			keyName = "inventoryOffsetX",
+			name = "Inventory Offset X",
+			description = "Configures where the total box x-axis is located relative to the inventory."
+	)
+	default int inventoryXOffset()
+	{
+		return 0;
+	}
+
+	@ConfigItem(
+			position = 8,
+			keyName = "inventoryOffsetXNegative",
+			name = "Inventory Offset X Negative",
+			description = "Configures whether or not the total box y-axis offset is a negative number."
+	)
+	default boolean isInventoryXOffsetNegative()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			position = 9,
+			keyName = "inventoryOffsetY",
+			name = "Inventory Offset Y",
+			description = "Configures where the total box x-axis is located relative to the inventory."
+	)
+	default int inventoryYOffset()
+	{
+		return 42;
+	}
+
+	@ConfigItem(
+			position = 10,
+			keyName = "inventoryOffsetYNegative",
+			name = "Inventory Offset Y Negative",
+			description = "Configures whether or not the total box y-axis offset is a negative number."
+	)
+	default boolean isInventoryYOffsetNegative()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			position = 11,
+			keyName = "showWhenEmpty",
+			name = "Show On Empty",
+			description = "Configures whether or not the total box is shown when there are no items in the inventory."
+	)
+	default boolean showOnEmpty()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			position = 11,
+			keyName = "showRunTime",
+			name = "Show Run Time",
+			description = "Configures whether or not the run time is shown when available."
+	)
+	default boolean showRunTime()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			position = 11,
 			keyName = "showExactGp",
 			name = "Show Exact Gp",
-			description = "Configures whether or not the exact gp total is shown in the counter box."
+			description = "Configures whether or not the exact gp total is shown in the total box."
 	)
 	default boolean showExactGp()
 	{
@@ -176,6 +190,7 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
+			position = 11,
 			keyName = "showCoinStack",
 			name = "Show Coin Stack",
 			description = "Configures whether or not the coin stack is displayed."
@@ -186,9 +201,10 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
+			position = 11,
 			keyName = "showWhileBanking",
 			name = "Show While Banking",
-			description = "Configures whether or not the counter box is shown while banking."
+			description = "Configures whether or not the total box is shown while banking."
 	)
 	default boolean showWhileBanking()
 	{

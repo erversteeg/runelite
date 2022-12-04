@@ -47,7 +47,6 @@ class InventoryTotalOverlay extends Overlay
 {
 	private static final int CORNER_RADIUS = 10;
 	private static final int TEXT_Y_OFFSET = 17;
-	private static final int INVENTORY_GAP_OFFSET = 6;
 	private static final String PROFIT_LOSS_TIME_FORMAT = "%02d:%02d:%02d";
 	private static final String PROFIT_LOSS_TIME_NO_HOURS_FORMAT = "%02d:%02d";
 	private static final int HORIZONTAL_PADDING = 10;
@@ -86,7 +85,7 @@ class InventoryTotalOverlay extends Overlay
 		inventoryItemContainer = client.getItemContainer(InventoryID.INVENTORY);
 		equipmentItemContainer = client.getItemContainer(InventoryID.EQUIPMENT);
 
-		if (config.enableProfitLoss() && onceBank)
+		if (config.enableProfitLoss())
 		{
 			plugin.setMode(InventoryTotalMode.PROFIT_LOSS);
 		}
@@ -121,10 +120,10 @@ class InventoryTotalOverlay extends Overlay
 
 		// before totals
 		boolean newRun = plugin.getPreviousState() == InventoryTotalState.BANK && plugin.getState() == InventoryTotalState.RUN;
-		if (newRun)
-		{
-			plugin.getItemPrices().clear();
-		}
+//		if (newRun)
+//		{
+//			plugin.getItemPrices().clear();
+//		}
 
 		// totals
 		int [] inventoryTotals = plugin.getInventoryTotals();
