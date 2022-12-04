@@ -25,7 +25,10 @@
  */
 package net.runelite.client.plugins.inventorytotal;
 
-import net.runelite.api.*;
+import net.runelite.api.Client;
+import net.runelite.api.InventoryID;
+import net.runelite.api.ItemContainer;
+import net.runelite.api.ItemID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.game.ItemManager;
@@ -37,7 +40,6 @@ import net.runelite.client.ui.overlay.components.TextComponent;
 import net.runelite.client.util.ImageUtil;
 
 import javax.inject.Inject;
-import java.awt.Point;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.text.NumberFormat;
@@ -120,10 +122,6 @@ class InventoryTotalOverlay extends Overlay
 
 		// before totals
 		boolean newRun = plugin.getPreviousState() == InventoryTotalState.BANK && plugin.getState() == InventoryTotalState.RUN;
-//		if (newRun)
-//		{
-//			plugin.getItemPrices().clear();
-//		}
 
 		// totals
 		int [] inventoryTotals = plugin.getInventoryTotals();

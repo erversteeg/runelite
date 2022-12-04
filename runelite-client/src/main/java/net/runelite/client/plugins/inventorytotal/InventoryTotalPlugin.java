@@ -38,11 +38,14 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @PluginDescriptor(
 	name = "Inventory Total",
-	description = "Shows the total GE value of items in your inventory.",
+	description = "Shows the total GE value of all items in your inventory.",
 	enabledByDefault = false
 )
 
@@ -82,17 +85,17 @@ public class InventoryTotalPlugin extends Plugin
 
 	private InventoryTotalRunData runData;
 
+	private InventoryTotalMode mode = InventoryTotalMode.TOTAL;
+
+	private InventoryTotalState state = InventoryTotalState.NONE;
+	private InventoryTotalState prevState = InventoryTotalState.NONE;
+
 	private long totalGp = 0;
 	private long totalQty = 0;
 
 	private long initialGp = 0;
 
 	private long runStartTime = 0;
-
-	private InventoryTotalMode mode = InventoryTotalMode.TOTAL;
-
-	private InventoryTotalState state = InventoryTotalState.NONE;
-	private InventoryTotalState prevState = InventoryTotalState.NONE;
 
 	private long lastWriteSaveTime = 0;
 
@@ -118,6 +121,12 @@ public class InventoryTotalPlugin extends Plugin
 		{
 			runData = getSavedData();
 		}
+	}
+
+	@Provides
+	InventoryTotalConfig provideConfig(ConfigManager configManager)
+	{
+		return configManager.getConfig(InventoryTotalConfig.class);
 	}
 
 	void onNewRun()
@@ -162,12 +171,6 @@ public class InventoryTotalPlugin extends Plugin
 		runStartTime = 0;
 
 		writeSavedData();
-	}
-
-	@Provides
-	InventoryTotalConfig provideConfig(ConfigManager configManager)
-	{
-		return configManager.getConfig(InventoryTotalConfig.class);
 	}
 
 	int [] getInventoryTotals()
@@ -334,6 +337,19 @@ public class InventoryTotalPlugin extends Plugin
 		return savedData;
 	}
 
+	long elapsedRunTime()
+	{
+		if (runStartTime == 0 || mode == InventoryTotalMode.TOTAL || !config.showRunTime())
+		{
+			return NO_PROFIT_LOSS_TIME;
+		}
+
+		return Instant
+				.now()
+				.minusMillis(runStartTime)
+				.toEpochMilli();
+	}
+
 	void setMode(InventoryTotalMode mode)
 	{
 		this.mode = mode;
@@ -388,18 +404,5 @@ public class InventoryTotalPlugin extends Plugin
 	public long getTotalQty()
 	{
 		return totalQty;
-	}
-
-	long elapsedRunTime()
-	{
-		if (runStartTime == 0 || mode == InventoryTotalMode.TOTAL || !config.showRunTime())
-		{
-			return NO_PROFIT_LOSS_TIME;
-		}
-
-		return Instant
-				.now()
-				.minusMillis(runStartTime)
-				.toEpochMilli();
 	}
 }
