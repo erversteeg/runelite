@@ -201,7 +201,7 @@ class InventoryTotalOverlay extends Overlay
 							 Widget inventoryWidget, long profitGp, long totalQty, long total, String totalText,
 							 String runTimeText, int height) {
 		int imageSize = 15;
-		boolean showCoinStack = config.showCoinStack() && total > 0;
+		boolean showCoinStack = config.showCoinStack() && total != 0;
 		int numCoins;
 		if (total > Integer.MAX_VALUE)
 		{
@@ -217,7 +217,7 @@ class InventoryTotalOverlay extends Overlay
 		}
 		numCoins = Math.abs(numCoins);
 
-		if (totalQty == 0 && !config.showOnEmpty()) {
+		if (totalQty == 0 && !config.showOnEmpty() || (plugin.getState() == InventoryTotalState.BANK && !config.showWhileBanking())) {
 			return;
 		}
 
@@ -255,7 +255,19 @@ class InventoryTotalOverlay extends Overlay
 				break;
 		}
 
-		int y = inventoryWidget.getCanvasLocation().getY() - height - config.inventoryGap() + INVENTORY_GAP_OFFSET;
+		int xOffset = config.inventoryXOffset();
+		if (config.isInventoryXOffsetNegative())
+		{
+			xOffset *= -1;
+		}
+		x += xOffset;
+
+		int yOffset = config.inventoryYOffset();
+		if (config.isInventoryYOffsetNegative())
+		{
+			yOffset *= -1;
+		}
+		int y = inventoryWidget.getCanvasLocation().getY() - height - yOffset;
 
 		Color backgroundColor = config.totalColor();
 
@@ -315,7 +327,7 @@ class InventoryTotalOverlay extends Overlay
 
 		if (showCoinStack)
 		{
-			int imageOffset = 3;
+			int imageOffset = 4;
 
 			BufferedImage coinsImage = itemManager.getImage(ItemID.COINS_995, numCoins, false);
 			coinsImage = ImageUtil.resizeImage(coinsImage, imageSize, imageSize);
@@ -374,13 +386,14 @@ class InventoryTotalOverlay extends Overlay
 
 	private String getFormattedRunTime()
 	{
-		long profitLossTime = plugin.elapsedProfitLossTime();
-		if (profitLossTime == InventoryTotalPlugin.NO_PROFIT_LOSS_TIME)
+		long runTime = plugin.elapsedRunTime();
+
+		if (runTime == InventoryTotalPlugin.NO_PROFIT_LOSS_TIME)
 		{
 			return null;
 		}
 
-		long totalSecs = profitLossTime / 1000;
+		long totalSecs = runTime / 1000;
 		long totalMins = totalSecs / 60;
 
 		long hrs = totalMins / 60;

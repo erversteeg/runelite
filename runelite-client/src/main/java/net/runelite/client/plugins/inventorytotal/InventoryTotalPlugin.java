@@ -72,7 +72,7 @@ public class InventoryTotalPlugin extends Plugin
 	private long totalGp = 0;
 	private long totalQty = 0;
 
-	private Instant profitLossStartTime;
+	private Instant runStartTime;
 
 	private Map<Integer, Integer> itemPrices = new HashMap<>();
 
@@ -99,12 +99,13 @@ public class InventoryTotalPlugin extends Plugin
 	void onNewRun()
 	{
 		overlay.hide();
+
+		runStartTime = Instant.now();
+
 		// to handle same tick bank closing
 		new Timer().schedule(new TimerTask() {
 			@Override
 			public void run() {
-				profitLossStartTime = Instant.now();
-
 				profitLossInitialGp = totalGp;
 				if (mode == InventoryTotalMode.TOTAL)
 				{
@@ -127,7 +128,7 @@ public class InventoryTotalPlugin extends Plugin
 
 	void onBank()
 	{
-		profitLossStartTime = null;
+		runStartTime = null;
 		profitLossInitialGp = 0;
 		initialGp = 0;
 	}
@@ -330,16 +331,16 @@ public class InventoryTotalPlugin extends Plugin
 		return itemPrices;
 	}
 
-	long elapsedProfitLossTime()
+	long elapsedRunTime()
 	{
-		if (profitLossStartTime == null || mode == InventoryTotalMode.TOTAL || !config.showProfitLossTime())
+		if (runStartTime == null || mode == InventoryTotalMode.TOTAL || !config.showProfitLossTime())
 		{
 			return NO_PROFIT_LOSS_TIME;
 		}
 
 		return Instant
 				.now()
-				.minusMillis(profitLossStartTime.toEpochMilli())
+				.minusMillis(runStartTime.toEpochMilli())
 				.toEpochMilli();
 	}
 }

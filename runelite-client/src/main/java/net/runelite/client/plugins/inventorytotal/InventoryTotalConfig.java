@@ -96,13 +96,43 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "inventoryOffset",
-			name = "Inventory Offset",
-			description = "Configures where the counter box is located relative to the inventory."
+			keyName = "inventoryOffsetX",
+			name = "Inventory Offset X",
+			description = "Configures where the counter box X-axis is located relative to the inventory."
 	)
-	default int inventoryGap()
+	default int inventoryXOffset()
 	{
-		return 18;
+		return 0;
+	}
+
+	@ConfigItem(
+			keyName = "inventoryOffsetYNegative",
+			name = "Inventory Offset Y Negative",
+			description = "Configures where the counter box Y-axis offset is a negative number."
+	)
+	default boolean isInventoryYOffsetNegative()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			keyName = "inventoryOffsetY",
+			name = "Inventory Offset Y",
+			description = "Configures where the counter box Y-axis is located relative to the inventory."
+	)
+	default int inventoryYOffset()
+	{
+		return 41;
+	}
+
+	@ConfigItem(
+			keyName = "inventoryOffsetXNegative",
+			name = "Inventory Offset X Negative",
+			description = "Configures where the counter box X-axis offset is a negative number."
+	)
+	default boolean isInventoryXOffsetNegative()
+	{
+		return false;
 	}
 
 	@ConfigItem(
@@ -126,9 +156,9 @@ public interface InventoryTotalConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "showProfitLossTime",
-			name = "Show Timer",
-			description = "Configures whether or not a profit / loss timer is shown in the counter box."
+			keyName = "showRunTime",
+			name = "Show Run Time",
+			description = "Configures whether or not the run time is shown."
 	)
 	default boolean showProfitLossTime()
 	{
@@ -151,6 +181,16 @@ public interface InventoryTotalConfig extends Config
 			description = "Configures whether or not the coin stack is displayed."
 	)
 	default boolean showCoinStack()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "showWhileBanking",
+			name = "Show While Banking",
+			description = "Configures whether or not the counter box is shown while banking."
+	)
+	default boolean showWhileBanking()
 	{
 		return true;
 	}
