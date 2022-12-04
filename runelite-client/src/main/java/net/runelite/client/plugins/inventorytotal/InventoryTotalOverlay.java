@@ -65,7 +65,7 @@ class InventoryTotalOverlay extends Overlay
 
 	private boolean onceBank = false;
 
-	private boolean isVisible = true;
+	private boolean showInterstitial = false;
 
 	@Inject
 	private InventoryTotalOverlay(Client client, InventoryTotalPlugin plugin, InventoryTotalConfig config, ItemManager itemManager)
@@ -164,16 +164,7 @@ class InventoryTotalOverlay extends Overlay
 
 		int height = 20;
 
-		String totalText;
-		if (config.showExactGp())
-		{
-			totalText = getExactFormattedGp();
-		}
-		else
-		{
-			totalText = getFormattedGp();
-			totalText = totalText.replace(".0", "");
-		}
+		String totalText = getTotalText(plugin.getProfitGp());
 
 		String formattedRunTime = getFormattedRunTime();
 		String runTimeText = null;
@@ -183,19 +174,30 @@ class InventoryTotalOverlay extends Overlay
 			runTimeText = " (" + formattedRunTime + ")";
 		}
 
-		if (!isVisible)
+		long total = plugin.getProfitGp();
+
+		if (showInterstitial)
 		{
-			return null;
+			total = 0;
+
+			if (plugin.getMode() == InventoryTotalMode.PROFIT_LOSS)
+			{
+				totalText = "0";
+			}
+			else
+			{
+				totalText = getTotalText(plugin.getTotalGp());
+			}
 		}
 
-		renderTotal(config, graphics, plugin, inventoryWidget, plugin.getProfitGp(),
-				plugin.getTotalQty(), plugin.getProfitGp(), totalText, runTimeText, height);
+		renderTotal(config, graphics, plugin, inventoryWidget,
+				plugin.getTotalQty(), total, totalText, runTimeText, height);
 
 		return null;
 	}
 
 	private void renderTotal(InventoryTotalConfig config, Graphics2D graphics, InventoryTotalPlugin plugin,
-							 Widget inventoryWidget, long profitGp, long totalQty, long total, String totalText,
+							 Widget inventoryWidget, long totalQty, long total, String totalText,
 							 String runTimeText, int height) {
 		int imageSize = 15;
 		boolean showCoinStack = config.showCoinStack() && total != 0;
@@ -214,7 +216,7 @@ class InventoryTotalOverlay extends Overlay
 		}
 		numCoins = Math.abs(numCoins);
 
-		if (totalQty == 0 && !config.showOnEmpty() || (plugin.getState() == InventoryTotalState.BANK && !config.showWhileBanking())) {
+		if (totalQty == 0 || (plugin.getState() == InventoryTotalState.BANK && !config.showWhileBanking())) {
 			return;
 		}
 
@@ -270,7 +272,7 @@ class InventoryTotalOverlay extends Overlay
 
 		if (plugin.getState() == InventoryTotalState.RUN && plugin.getMode() == InventoryTotalMode.PROFIT_LOSS)
 		{
-			if (profitGp >= 0)
+			if (total >= 0)
 			{
 				backgroundColor = config.profitColor();
 			}
@@ -332,10 +334,21 @@ class InventoryTotalOverlay extends Overlay
 		}
 	}
 
-	private String getFormattedGp()
+	private String getTotalText(long total)
 	{
-		long total = plugin.getProfitGp();
+		if (config.showExactGp())
+		{
+			return getExactFormattedGp(total);
+		}
+		else
+		{
+			String totalText = getFormattedGp(total);
+			return totalText.replace(".0", "");
+		}
+	}
 
+	private String getFormattedGp(long total)
+	{
 		if (total >= 1000000000 || total <= -1000000000)
 		{
 			double bTotal = total / 1000000000.0;
@@ -357,7 +370,7 @@ class InventoryTotalOverlay extends Overlay
 				}
 				else
 				{
-					return getExactFormattedGp();
+					return getExactFormattedGp(total);
 				}
 			}
 		}
@@ -376,9 +389,9 @@ class InventoryTotalOverlay extends Overlay
 		return totalString;
 	}
 
-	private String getExactFormattedGp()
+	private String getExactFormattedGp(long total)
 	{
-		return NumberFormat.getInstance(Locale.ENGLISH).format(plugin.getProfitGp());
+		return NumberFormat.getInstance(Locale.ENGLISH).format(total);
 	}
 
 	private String getFormattedRunTime()
@@ -417,13 +430,13 @@ class InventoryTotalOverlay extends Overlay
 		return equipmentItemContainer;
 	}
 
-	public void show()
+	public void showInterstitial()
 	{
-		isVisible = true;
+		showInterstitial = true;
 	}
 
-	public void hide()
+	public void hideInterstitial()
 	{
-		isVisible = false;
+		showInterstitial = false;
 	}
 }

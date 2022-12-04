@@ -131,7 +131,7 @@ public class InventoryTotalPlugin extends Plugin
 
 	void onNewRun()
 	{
-		overlay.hide();
+		overlay.showInterstitial();
 
 		runStartTime = Instant.now().toEpochMilli();
 
@@ -157,7 +157,7 @@ public class InventoryTotalPlugin extends Plugin
 
 				writeSavedData();
 
-				overlay.show();
+				overlay.hideInterstitial();
 			}
 		}, BANK_CLOSE_DELAY);
 	}
@@ -394,6 +394,11 @@ public class InventoryTotalPlugin extends Plugin
 	void setTotalGp(long totalGp)
 	{
 		this.totalGp = totalGp;
+	}
+
+	public long getTotalGp()
+	{
+		return totalGp;
 	}
 
 	void setTotalQty(long totalQty)

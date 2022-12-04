@@ -158,17 +158,6 @@ public interface InventoryTotalConfig extends Config
 
 	@ConfigItem(
 			position = 11,
-			keyName = "showWhenEmpty",
-			name = "Show On Empty",
-			description = "Configures whether or not the total box is shown when there are no items in the inventory."
-	)
-	default boolean showOnEmpty()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-			position = 11,
 			keyName = "showRunTime",
 			name = "Show Run Time",
 			description = "Configures whether or not the run time is shown when available."
